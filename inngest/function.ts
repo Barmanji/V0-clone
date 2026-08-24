@@ -1,5 +1,13 @@
 // src/inngest/functions.ts
 import { inngest } from "./client";
+import { openai, createAgent } from "@inngest/agent-kit";
+
+// const model = gemini({
+//   model: "gemini-1.5-flash",
+//   defaultParameters: { temperature: 0.5 },
+// });
+const model = openai({ model: "gpt-3.5-turbo" });
+const modelWithApiKey = openai({ model: "gpt-3.5-turbo", apiKey: process.env.OPEN_AI_API });
 
 export const processTask = inngest.createFunction(
   { id: "process-task", triggers: { event: "app/task.created" } },
