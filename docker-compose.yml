@@ -1,0 +1,16 @@
+services:
+  v0-postgres:
+    image: postgres:17
+    container_name: v0-clone-db
+    environment:
+      POSTGRES_DB: v0-clone
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - v0_pg_data:/var/lib/postgresql/data
+
+volumes:
+  v0_pg_data:
+
