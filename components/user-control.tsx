@@ -5,7 +5,7 @@ import { UserButton } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 
 
-export default function UserControl({ showName }) {
+export default function UserControl({ showName }: any) {
   const currentTheme = useCurrentTheme();
 
   return (
@@ -16,7 +16,7 @@ export default function UserControl({ showName }) {
           userButtonAvatarBox: "rounded-md! size-8",
           userButtonTrigger: "rounded-md!",
         },
-        baseTheme: currentTheme === "dark" ? dark : undefined,
+        theme: currentTheme === "dark" ? dark : undefined,
       }}
       showName={showName}
     />
