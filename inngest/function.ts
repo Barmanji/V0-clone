@@ -1,23 +1,182 @@
-// src/inngest/functions.ts
 import { inngest } from "./client";
-import { openai, createAgent } from "@inngest/agent-kit";
+import { gemini, openai, createAgent, createTool, createNetwork } from "@inngest/agent-kit";
+import Sandbox from "@e2b/code-interpreter";
+import { z } from "zod";
+import { PROMPT } from "@/modules/constant/prompt";
+import { lastAssistantTextMessageContent } from "./utils";
 
-// const model = gemini({
-//   model: "gemini-1.5-flash",
-//   defaultParameters: { temperature: 0.5 },
-// });
-const model = openai({ model: "gpt-3.5-turbo" });
-const modelWithApiKey = openai({ model: "gpt-3.5-turbo", apiKey: process.env.OPEN_AI_API });
+const model = openai({ model: "gpt-3.5-turbo" })
 
-export const processTask = inngest.createFunction(
-  { id: "process-task", triggers: { event: "app/task.created" } },
+export const codeAgentFunction = inngest.createFunction(
+ {
+    id: "code-agent",
+    triggers: { event: "code-agent/run" },
+  },
+
   async ({ event, step }) => {
-    const result = await step.run("handle-task", async () => {
-      return { processed: true, id: event.data.id };
+    // Step-1
+    const sandboxId = await step.run("get-sandbox-id", async () => {
+      const sandbox = await Sandbox.create("v0-clone-build-dev");
+      return sandbox.sandboxId;
     });
 
-    await step.sleep("pause", "1s");
+    const codeAgent = createAgent({
+      name: "code-agent",
+      description: "An expert coding agent",
+      system: PROMPT,
+      model: model,
+      tools: [
+        // 1. Terminal
+        createTool({
+          name: "terminal",
+          description: "Use the terminal to run commands",
+          parameters: z.object({
+            command: z.string(),
+          }),
+          handler: async ({ command }, { step }) => {
+            return await step?.run("terminal", async () => {
+              const buffers = { stdout: "", stderr: "" };
 
-    return { message: `Task ${event.data.id} complete`, result };
-  },
+              try {
+                const sandbox = await Sandbox.connect(sandboxId);
+
+                const result = await sandbox.commands.run(command, {
+                  onStdout: (data) => {
+                    buffers.stdout += data;
+                  },
+
+                  onStderr: (data) => {
+                    buffers.stderr += data;
+                  },
+                });
+
+                return result.stdout;
+              } catch (error) {
+                console.log(
+                  `Command failed: ${error} \n stdout: ${buffers.stdout}\n stderr: ${buffers.stderr}`
+                );
+
+                return `Command failed: ${error} \n stdout: ${buffers.stdout}\n stderr: ${buffers.stderr}`;
+              }
+            });
+          },
+        }),
+
+        // 2. createOrUpdateFiles
+        createTool({
+          name: "createOrUpdateFiles",
+          description: "Create or update files in the sanbox",
+          parameters: z.object({
+            files: z.array(
+              z.object({
+                path: z.string(),
+                content: z.string(),
+              })
+            ),
+          }),
+
+          handler: async ({ files }, { step, network }) => {
+            const newFiles = await step?.run(
+              "createOrUpdateFiles",
+              async () => {
+                try {
+                  const updatedFiles = network?.state?.data.files || {};
+
+                  const sanbox = await Sandbox.connect(sandboxId);
+
+                  for (const file of files) {
+                    await sanbox.files.write(file.path, file.content);
+                    updatedFiles[file.path] = file.content;
+                  }
+
+                  return updatedFiles;
+                } catch (error) {
+                  return "Error" + error;
+                }
+              }
+            );
+
+            if (typeof newFiles === "object") {
+              network.state.data.files = newFiles;
+            }
+          },
+        }),
+        // 3. readFiles
+        createTool({
+          name: "readFiles",
+          description: "Read files in the sandbox",
+
+          parameters: z.object({
+            files: z.array(z.string()),
+          }),
+          handler: async ({ files }, { step }) => {
+            return await step?.run("readFiles", async () => {
+              try {
+                const sanbox = await Sandbox.connect(sandboxId);
+
+                const contents = [];
+
+                for (const file of files) {
+                  const content = await sanbox.files.read(file);
+                  contents.push({ path: file, content });
+                }
+                return JSON.stringify(contents)
+              } catch (error) {
+                return "Error" + error
+              }
+            });
+          },
+        }),
+      ],
+
+      // How agent will act?
+      lifecycle:{
+        onResponse:async ({result , network})=>{
+          const lastAssistantMessageText = lastAssistantTextMessageContent(result);
+
+          if(lastAssistantMessageText && network){
+            if(lastAssistantMessageText.includes("<task_summary>")){
+              network.state.data.summary = lastAssistantMessageText
+            }
+          }
+
+          return result;
+        }
+      }
+    });
+
+    const network = createNetwork({
+      name:"coding-agent-network",
+      agents:[codeAgent],
+      maxIter:10,
+
+      router:async ({network})=>{
+        const summary = network.state.data.summary;
+
+        if(summary){
+          return
+        }
+
+        return codeAgent
+      }
+    })
+
+   const result = await network.run(event.data.value)
+
+   const isError = !result.state.data.summary ||  Object.keys(result.state.data.files || {}).length === 0;
+
+    const sandboxUrl = await step.run("get-sandbox-url", async () => {
+      const sandbox = await Sandbox.connect(sandboxId);
+      const host = sandbox.getHost(3000);
+
+      return `http://${host}`;
+    });
+
+    return {
+      url:sandboxUrl,
+      title:"Untitled",
+      files:result.state.data.files,
+      summary:result.state.data.summary
+    };
+  }
 );
