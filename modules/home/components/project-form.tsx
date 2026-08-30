@@ -2,7 +2,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import TextAreaAutosize from "react-textarea-autosize";
-import { ArrowUpIcon, Loader2Icon } from "lucide-react";
+import { ArrowUpIcon  } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -73,7 +74,7 @@ const PROJECT_TEMPLATES = [
 const ProjectForm = () => {
   const [isFocused, setIsFocused] = useState(false);
   const router = useRouter();
-  const { mutateAsync, isPending } = useCreateProject();
+  const { mutateAsync, isPending, isError } = useCreateProject();
 
   const {
     register,
@@ -100,6 +101,8 @@ const ProjectForm = () => {
       router.push(`/projects/${( res as any ).id}`);
       toast.success("Project created successfully");
       reset();
+
+      if(isError) toast.error("Unauthorized user, Please login")
     } catch (error) {
       toast.error(( error  as Error).message || "Failed to create project");
     }
@@ -165,7 +168,8 @@ const ProjectForm = () => {
             isPending && "opacity-50"
           )}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+            // TODO: return Toast popup when unauth
+            if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               handleSubmit(onSubmit)(e);
             }
@@ -193,7 +197,7 @@ const ProjectForm = () => {
             type="submit"
           >
             {isPending ? (
-              <Loader2Icon className="size-4 animate-spin" />
+              <Spinner className="size-4 animate-spin" />
             ) : (
               <ArrowUpIcon className="size-4" />
             )}
