@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { Toaster } from "@/components/ui/toast";
 import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
+import { QueryProvider } from "@/providers/query-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -42,17 +44,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <ClerkProvider>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-            <Toaster/>
-            {children}
-        </ThemeProvider>
-                  </ClerkProvider>
-
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <QueryProvider>
+              <TooltipProvider>{children}</TooltipProvider>
+              <Toaster />
+            </QueryProvider>
+          </ThemeProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

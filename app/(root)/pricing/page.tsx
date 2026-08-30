@@ -2,10 +2,7 @@
 
 import Image from "next/image";
 import { PricingTable } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
-import { useCurrentTheme } from "@/hooks/use-current-theme";
 export default function Page() {
-  const currentTheme = useCurrentTheme();
   return (
     <div className="flex items-center justify-center w-full px-4 py-8">
       <div className="max-w-5xl w-full">
@@ -23,14 +20,7 @@ export default function Page() {
           <p className="text-muted-foreground text-center text-sm md:text-base">
             Choose the plan that fits your needs
           </p>
-          <PricingTable
-            appearance={{
-              baseTheme: currentTheme === "dark" ? dark : undefined,
-              elements: {
-                pricingTableCard: "border! shadow-none! rounded-lg!",
-              },
-            }}
-          />
+          <PricingTable/>
         </section>
       </div>
     </div>
