@@ -1,14 +1,27 @@
 import { inngest } from "./client";
-import { gemini, openai, createAgent, createTool, createNetwork } from "@inngest/agent-kit";
+import {
+  gemini,
+  openai,
+  createAgent,
+  createTool,
+  createNetwork,
+  createState
+} from "@inngest/agent-kit";
 import Sandbox from "@e2b/code-interpreter";
 import { z } from "zod";
-import { PROMPT } from "@/modules/constant/prompt";
+import {
+  FRAGMENT_TITLE_PROMPT,
+  PROMPT,
+  RESPONSE_PROMPT,
+} from "@/modules/constant/prompt";
 import { lastAssistantTextMessageContent } from "./utils";
+import db from "@/lib/db";
+import { MessageRole, MessageType } from "@/lib/generated/prisma/enums";
 
-const model = openai({ model: "gpt-3.5-turbo" })
+const model = openai({ model: "gpt-3.5-turbo" });
 
 export const codeAgentFunction = inngest.createFunction(
- {
+  {
     id: "code-agent",
     triggers: { event: "code-agent/run" },
   },
@@ -19,6 +32,42 @@ export const codeAgentFunction = inngest.createFunction(
       const sandbox = await Sandbox.create("v0-clone-build-dev");
       return sandbox.sandboxId;
     });
+    // Persistent mem
+    const previousMessages: any = await step.run(
+      "get-previous-messages",
+      async () => {
+        const formattedMessages = [];
+
+        const messages = await db.message.findMany({
+          where: {
+            projectId: event.data.projectId,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+        for (const message of messages) {
+          formattedMessages.push({
+            type: "text",
+            role: message.role === "ASSISTANT" ? "assistant" : "user",
+            content: message.content,
+          });
+        }
+
+        return formattedMessages;
+      },
+    );
+
+    const state = createState(
+      {
+        summary: "",
+        files: {},
+      },
+      {
+        messages: previousMessages,
+      },
+    );
 
     const codeAgent = createAgent({
       name: "code-agent",
@@ -53,7 +102,7 @@ export const codeAgentFunction = inngest.createFunction(
                 return result.stdout;
               } catch (error) {
                 console.log(
-                  `Command failed: ${error} \n stdout: ${buffers.stdout}\n stderr: ${buffers.stderr}`
+                  `Command failed: ${error} \n stdout: ${buffers.stdout}\n stderr: ${buffers.stderr}`,
                 );
 
                 return `Command failed: ${error} \n stdout: ${buffers.stdout}\n stderr: ${buffers.stderr}`;
@@ -71,7 +120,7 @@ export const codeAgentFunction = inngest.createFunction(
               z.object({
                 path: z.string(),
                 content: z.string(),
-              })
+              }),
             ),
           }),
 
@@ -93,7 +142,7 @@ export const codeAgentFunction = inngest.createFunction(
                 } catch (error) {
                   return "Error" + error;
                 }
-              }
+              },
             );
 
             if (typeof newFiles === "object") {
@@ -120,9 +169,9 @@ export const codeAgentFunction = inngest.createFunction(
                   const content = await sanbox.files.read(file);
                   contents.push({ path: file, content });
                 }
-                return JSON.stringify(contents)
+                return JSON.stringify(contents);
               } catch (error) {
-                return "Error" + error
+                return "Error" + error;
               }
             });
           },
@@ -130,40 +179,88 @@ export const codeAgentFunction = inngest.createFunction(
       ],
 
       // How agent will act?
-      lifecycle:{
-        onResponse:async ({result , network})=>{
-          const lastAssistantMessageText = lastAssistantTextMessageContent(result);
+      lifecycle: {
+        onResponse: async ({ result, network }) => {
+          const lastAssistantMessageText =
+            lastAssistantTextMessageContent(result);
 
-          if(lastAssistantMessageText && network){
-            if(lastAssistantMessageText.includes("<task_summary>")){
-              network.state.data.summary = lastAssistantMessageText
+          if (lastAssistantMessageText && network) {
+            if (lastAssistantMessageText.includes("<task_summary>")) {
+              network.state.data.summary = lastAssistantMessageText;
             }
           }
 
           return result;
-        }
-      }
+        },
+      },
     });
 
     const network = createNetwork({
-      name:"coding-agent-network",
-      agents:[codeAgent],
-      maxIter:10,
+      name: "coding-agent-network",
+      agents: [codeAgent],
+      maxIter: 10,
 
-      router:async ({network})=>{
+      router: async ({ network }) => {
         const summary = network.state.data.summary;
 
-        if(summary){
-          return
+        if (summary) {
+          return;
         }
 
-        return codeAgent
+        return codeAgent;
+      },
+    });
+
+    const result = await network.run(event.data.value, {state});
+
+    const fragmentTitleGenerator = createAgent({
+      name: "fragment-title-generator",
+      description: "Generate a title for the fragment",
+      system: FRAGMENT_TITLE_PROMPT,
+      model: model,
+    });
+
+    const responseGenerator = createAgent({
+      name: "response-generator",
+      description: "Generate a response for the fragment",
+      system: RESPONSE_PROMPT,
+      model: model,
+    });
+
+    const { output: fragmentTitleOutput } = await fragmentTitleGenerator.run(
+      result.state.data.summary,
+    );
+    const { output: responseOutput } = await responseGenerator.run(
+      result.state.data.summary,
+    );
+
+    const generateFragmentTitle = () => {
+      if (fragmentTitleOutput[0].type !== "text") {
+        return "Fragment";
       }
-    })
 
-   const result = await network.run(event.data.value)
+      if (Array.isArray(fragmentTitleOutput[0].content)) {
+        return fragmentTitleOutput[0].content.map((c) => c).join("");
+      } else {
+        return fragmentTitleOutput[0].content;
+      }
+    };
 
-   const isError = !result.state.data.summary ||  Object.keys(result.state.data.files || {}).length === 0;
+    const generateResponse = () => {
+      if (responseOutput[0].type !== "text") {
+        return "Here you go";
+      }
+
+      if (Array.isArray(responseOutput[0].content)) {
+        return responseOutput[0].content.map((c) => c).join("");
+      } else {
+        return responseOutput[0].content;
+      }
+    };
+
+    const isError =
+      !result.state.data.summary ||
+      Object.keys(result.state.data.files || {}).length === 0;
 
     const sandboxUrl = await step.run("get-sandbox-url", async () => {
       const sandbox = await Sandbox.connect(sandboxId);
@@ -172,11 +269,40 @@ export const codeAgentFunction = inngest.createFunction(
       return `http://${host}`;
     });
 
+    await step.run("save-result", async () => {
+      if (isError) {
+        return await db.message.create({
+          data: {
+            projectId: event.data.projectId,
+            content: "Something went wrong in saving-result. Please try again",
+            role: MessageRole.ASSISTANT,
+            type: MessageType.ERROR,
+          },
+        });
+      }
+
+      return await db.message.create({
+        data: {
+          projectId: event.data.projectId,
+          content: generateResponse(),
+          role: MessageRole.ASSISTANT,
+          type: MessageType.RESULT,
+          fragments: {
+            create: {
+              sandboxUrl: sandboxUrl,
+              title: generateFragmentTitle(),
+              files: result.state.data.files,
+            },
+          },
+        },
+      });
+    });
+
     return {
-      url:sandboxUrl,
-      title:"Untitled",
-      files:result.state.data.files,
-      summary:result.state.data.summary
+      url: sandboxUrl,
+      title: generateFragmentTitle(),
+      files: result.state.data.files,
+      summary: result.state.data.summary,
     };
-  }
+  },
 );

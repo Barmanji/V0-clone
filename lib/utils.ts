@@ -5,6 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export type TreeItem = string | [string, ...TreeItem[]];
+
+interface TreeNode {
+  [key: string]: TreeNode | null;
+}
+
 /**
  * Convert a record of files to a tree structure.
  * @param files - Record of file paths to content
@@ -15,12 +21,11 @@ export function cn(...inputs: ClassValue[]) {
  * Output: [["src", "Button.tsx"], "README.md"]
  */
 export function convertFilesToTreeItems(
-  files
-) {
-
+  files: Record<string, string>
+): TreeItem[] {
 
   // Build a tree structure first
-  const tree = {};
+  const tree: TreeNode = {};
   // Sort files to ensure consistent ordering
   const sortedPaths = Object.keys(files).sort();
 
@@ -34,7 +39,7 @@ export function convertFilesToTreeItems(
       if (!current[part]) {
         current[part] = {};
       }
-      current = current[part];
+      current = current[part] as TreeNode;
     }
 
     // Add the file (leaf node)
@@ -43,14 +48,14 @@ export function convertFilesToTreeItems(
   }
 
   // Convert tree structure to TreeItem format
-  function convertNode(node, name) {
+  function convertNode(node: TreeNode, name: string = ""): string | TreeItem[] {
     const entries = Object.entries(node);
 
     if (entries.length === 0) {
       return name || "";
     }
 
-    const children = [];
+    const children: TreeItem[] = [];
 
     for (const [key, value] of entries) {
       if (value === null) {
