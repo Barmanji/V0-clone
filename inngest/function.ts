@@ -5,7 +5,7 @@ import {
   createAgent,
   createTool,
   createNetwork,
-  createState
+  createState,
 } from "@inngest/agent-kit";
 import Sandbox from "@e2b/code-interpreter";
 import { z } from "zod";
@@ -18,7 +18,7 @@ import { lastAssistantTextMessageContent } from "./utils";
 import db from "@/lib/db";
 import { MessageRole, MessageType } from "@/lib/generated/prisma/enums";
 
-const model = openai({ model: "gpt-3.5-turbo" });
+const model = openai({ model: "gpt-4o-mini" });
 
 export const codeAgentFunction = inngest.createFunction(
   {
@@ -69,10 +69,28 @@ export const codeAgentFunction = inngest.createFunction(
       },
     );
 
+    const shadcnComponents = await step.run(
+      "list-shadcn-components",
+      async () => {
+        const sandbox = await Sandbox.connect(sandboxId);
+        const result = await sandbox.commands.run(
+          "ls /home/user/components/ui | sed 's/\\.tsx$//'",
+        );
+        return result.stdout
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .join(", ");
+      },
+    );
+    const resolvedPrompt = PROMPT.replace(
+      "{{SHADCN_COMPONENT_LIST}}",
+      shadcnComponents,
+    );
     const codeAgent = createAgent({
       name: "code-agent",
       description: "An expert coding agent",
-      system: PROMPT,
+      system: resolvedPrompt, // injecting it here, lets try
       model: model,
       tools: [
         // 1. Terminal
@@ -176,6 +194,26 @@ export const codeAgentFunction = inngest.createFunction(
             });
           },
         }),
+        createTool({
+          name: "verifyBuild",
+          description:
+            "Type-checks the project. Call this after all files are written and before finishing.",
+          parameters: z.object({}),
+          handler: async (_args, { step, network }) => {
+            const output = await step?.run("verifyBuild", async () => {
+              const sandbox = await Sandbox.connect(sandboxId);
+              const result = await sandbox.commands.run(
+                "npx tsc --noEmit --pretty false 2>&1 || true",
+              );
+              return result.stdout.trim() || "No errors found.";
+            });
+
+            if (network) {
+              network.state.data.buildStatus = output;
+            }
+            return output;
+          },
+        }),
       ],
 
       // How agent will act?
@@ -183,13 +221,15 @@ export const codeAgentFunction = inngest.createFunction(
         onResponse: async ({ result, network }) => {
           const lastAssistantMessageText =
             lastAssistantTextMessageContent(result);
-
-          if (lastAssistantMessageText && network) {
-            if (lastAssistantMessageText.includes("<task_summary>")) {
+          if (lastAssistantMessageText?.includes("<task_summary>")) {
+            const hasFiles =
+              Object.keys(network?.state?.data?.files || {}).length > 0;
+            const buildClean =
+              network?.state?.data?.buildStatus === "No errors found.";
+            if (hasFiles && buildClean) {
               network.state.data.summary = lastAssistantMessageText;
             }
           }
-
           return result;
         },
       },
@@ -202,29 +242,30 @@ export const codeAgentFunction = inngest.createFunction(
 
       router: async ({ network }) => {
         const summary = network.state.data.summary;
+        const files = network.state.data.files;
+        const hasFiles = files && Object.keys(files).length > 0;
+        const buildClean =
+          network.state.data.buildStatus === "No errors found.";
 
-        if (summary) {
-          return;
-        }
-
+        if (summary && hasFiles && buildClean) return;
         return codeAgent;
       },
     });
 
-    const result = await network.run(event.data.value, {state});
+    const result = await network.run(event.data.value, { state });
 
     const fragmentTitleGenerator = createAgent({
       name: "fragment-title-generator",
       description: "Generate a title for the fragment",
       system: FRAGMENT_TITLE_PROMPT,
-      model: model,
+      model: gemini({ model: "gemini-3.5-flash-lite" }),
     });
 
     const responseGenerator = createAgent({
       name: "response-generator",
       description: "Generate a response for the fragment",
       system: RESPONSE_PROMPT,
-      model: model,
+      model: gemini({ model: "gemini-3.5-flash" }),
     });
 
     const { output: fragmentTitleOutput } = await fragmentTitleGenerator.run(
