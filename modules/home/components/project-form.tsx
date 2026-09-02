@@ -1,8 +1,8 @@
-"use client"
+"use client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import TextAreaAutosize from "react-textarea-autosize";
-import { ArrowUpIcon  } from "lucide-react";
+import { ArrowUpIcon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import z from "zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCreateProject } from "@/modules/projects/hooks/create-and-getProjectbyId";
+import { Show } from "@clerk/nextjs";
 
 const formSchema = z.object({
   content: z
@@ -25,57 +26,56 @@ const PROJECT_TEMPLATES = [
     emoji: "🎬",
     title: "Build a Netflix clone",
     prompt:
-      "Build a Netflix-style homepage with a hero banner (use a nice, dark-mode compatible gradient here), movie sections, responsive cards, and a modal for viewing details using mock data and local state. Use dark mode.",
+      "Build a Netflix-style homepage using the existing project setup. Use shadcn/ui components where appropriate, mock movie data, and local React state. Include a hero section, movie sections, responsive movie cards, and a movie-details modal. Use a dark theme. Do not add unnecessary dependencies, use external APIs, or assume API keys are available.",
   },
   {
     emoji: "📦",
     title: "Build an admin dashboard",
     prompt:
-      "Create an admin dashboard with a sidebar, stat cards, a chart placeholder, and a basic table with filter and pagination using local state. Use clear visual grouping and balance in your design for a modern, professional look.",
+      "Build a modern admin dashboard using the existing project setup and shadcn/ui components where appropriate. Include a sidebar, stat cards, a chart using an already-installed chart library if available, and a table with filtering and pagination using local state and mock data. Keep the UI responsive and professional. Do not add unnecessary dependencies or assume external APIs/services exist.",
   },
   {
     emoji: "📋",
     title: "Build a kanban board",
     prompt:
-      "Build a kanban board with drag-and-drop using react-beautiful-dnd and support for adding and removing tasks with local state. Use consistent spacing, column widths, and hover effects for a polished UI.",
+      "Build a kanban board using the existing project setup and shadcn/ui components where appropriate. Support adding, editing, deleting, and moving tasks between columns using local React state. Use a drag-and-drop library only if one is already installed; otherwise implement the interaction without adding unnecessary dependencies. Do not use deprecated libraries or assume external services.",
   },
   {
     emoji: "🗂️",
     title: "Build a file manager",
     prompt:
-      "Build a file manager with folder list, file grid, and options to rename or delete items using mock data and local state. Focus on spacing, clear icons, and visual distinction between folders and files.",
+      "Build a file-manager-style interface using the existing project setup and shadcn/ui components where appropriate. Include a folder sidebar, file grid/list, and actions for renaming and deleting items using mock data and local state. Use consistent icons and responsive layouts. This is a UI simulation only; do not access the real filesystem or assume a backend exists.",
   },
   {
     emoji: "📺",
     title: "Build a YouTube clone",
     prompt:
-      "Build a YouTube-style homepage with mock video thumbnails, a category sidebar, and a modal preview with title and description using local state. Ensure clean alignment and a well-organized grid layout.",
+      "Build a YouTube-style homepage using the existing project setup and shadcn/ui components where appropriate. Use mock video data and local React state. Include a category/sidebar navigation, responsive video grid, and a modal for viewing video details. Do not use the YouTube API, external services, API keys, or unnecessary dependencies.",
   },
   {
     emoji: "🛍️",
     title: "Build a store page",
     prompt:
-      "Build a store page with category filters, a product grid, and local cart logic to add and remove items. Focus on clear typography, spacing, and button states for a great e-commerce UI.",
+      "Build a modern e-commerce store page using the existing project setup and shadcn/ui components where appropriate. Include category filtering, a responsive product grid, and a local shopping cart that supports adding and removing products and changing quantities. Use mock product data and local state. Do not integrate payments, external APIs, or unnecessary dependencies.",
   },
   {
     emoji: "🏡",
     title: "Build an Airbnb clone",
     prompt:
-      "Build an Airbnb-style listings grid with mock data, filter sidebar, and a modal with property details using local state. Use card spacing, soft shadows, and clean layout for a welcoming design.",
+      "Build an Airbnb-style property listings page using the existing project setup and shadcn/ui components where appropriate. Use mock property data and local React state. Include a responsive listings grid, filter controls, and a property-details modal. Focus on polished spacing, typography, and responsive behavior. Do not use external APIs, maps, authentication, payments, or unnecessary dependencies.",
   },
   {
     emoji: "🎵",
     title: "Build a Spotify clone",
     prompt:
-      "Build a Spotify-style music player with a sidebar for playlists, a main area for song details, and playback controls. Use local state for managing playback and song selection. Prioritize layout balance and intuitive control placement for a smooth user experience. Use dark mode.",
-  }
+      "Build a Spotify-style music player UI using the existing project setup and shadcn/ui components where appropriate. Use mock playlists and songs with local React state. Include a sidebar, playlist/song views, song selection, and playback controls. Simulate playback state only; do not use the Spotify API, external audio services, authentication, or API keys. Use a dark theme.",
+  },
 ];
 
-const ProjectForm = () => {
+const ProjectForm =  () => {
   const [isFocused, setIsFocused] = useState(false);
   const router = useRouter();
-  const { mutateAsync, isPending, isError } = useCreateProject();
-
+  const { mutateAsync, isPending } = useCreateProject();
   const {
     register,
     handleSubmit,
@@ -98,13 +98,12 @@ const ProjectForm = () => {
   const onSubmit = async (values: any) => {
     try {
       const res = await mutateAsync(values.content);
-      router.push(`/projects/${( res as any ).id}`);
+      router.push(`/projects/${(res as any).id}`);
       toast.success("Project created successfully");
       reset();
 
-      if(isError) toast.error("Unauthorized user, Please login")
     } catch (error) {
-      toast.error(( error  as Error).message || "Failed to create project");
+      toast.error((error as Error).message || "Failed to create project");
     }
   };
 
@@ -152,9 +151,10 @@ const ProjectForm = () => {
         onSubmit={handleSubmit(onSubmit)}
         className={cn(
           "relative border p-4 pt-1 rounded-xl bg-sidebar dark:bg-sidebar transition-all",
-          isFocused && "shadow-lg ring-2 ring-primary/20"
+          isFocused && "shadow-lg ring-2 ring-primary/20",
         )}
       >
+        <Show when={"signed-in"}>
         <TextAreaAutosize
           {...register("content")}
           disabled={isPending}
@@ -165,7 +165,7 @@ const ProjectForm = () => {
           maxRows={8}
           className={cn(
             "pt-4 resize-none border-none w-full outline-none bg-transparent",
-            isPending && "opacity-50"
+            isPending && "opacity-50",
           )}
           onKeyDown={(e) => {
             // TODO: return Toast popup when unauth
@@ -175,6 +175,20 @@ const ProjectForm = () => {
             }
           }}
         />
+        </Show>
+        <Show when={"signed-out"}>
+        <TextAreaAutosize
+          disabled= {!isPending}
+          placeholder="Please login to chat"
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          minRows={3}
+          maxRows={5}
+          className={cn(
+            "pt-4 resize-none border-none w-full outline-none bg-transparent cursor-not-allowed",
+          )}
+        />
+        </Show>
         {errors.content && (
           <p className="text-xs text-destructive px-1 pt-1">
             {errors.content.message}
@@ -191,7 +205,7 @@ const ProjectForm = () => {
           <Button
             className={cn(
               "size-8 rounded-full",
-              isButtonDisabled && "bg-muted-foreground border"
+              isButtonDisabled && "bg-muted-foreground border",
             )}
             disabled={isButtonDisabled}
             type="submit"

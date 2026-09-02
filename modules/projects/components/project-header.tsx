@@ -35,15 +35,13 @@ const ProjectHeader = ({ projectId }: ProjectHeaderProps) => {
 
   const { setTheme, theme } = useTheme();
   return (
-    <header className="p-2 flex justify-between items-center border-b">
+    <header className="px-4 py-2 flex justify-between items-center border-b h-[52px]">
       <DropdownMenu>
         <DropdownMenuTrigger>
           <Button
             variant={"ghost"}
             size={"sm"}
-            className={
-              "focus-visible:ring-0 hover:bg-transparent hover:opacity-75 transition-opacity !pl-2"
-            }
+            className="focus-visible:ring-0 hover:bg-transparent hover:opacity-75 transition-opacity px-0 gap-x-2 h-auto"
           >
             <Image
               src={"/logo.svg"}

@@ -129,9 +129,9 @@ export const FileExplorer = ({ files }) => {
   return (
     <ResizablePanelGroup orientation="horizontal" className="h-full">
       <ResizablePanel
-        defaultSize={25}
-        minSize={20}
-        maxSize={40}
+        defaultSize={30}
+        minSize={40}
+        maxSize={250}
         className="bg-sidebar"
       >
         <div className="h-full overflow-auto">

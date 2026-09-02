@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 
-const ProjectView = ({ projectId }: {projectId: string}) => {
+const ProjectView = ({ projectId }: { projectId: string }) => {
   const [activeFragment, setActiveFragment] = useState(null);
   const [tabState, setTabState] = useState("preview");
   const { has } = useAuth();
@@ -46,7 +46,7 @@ const ProjectView = ({ projectId }: {projectId: string}) => {
             value={tabState}
             onValueChange={(value) => setTabState(value)}
           >
-            <div className="w-full flex items-center p-2 border-b gap-x-2">
+            <div className="w-full flex items-center px-4 py-2 border-b gap-x-2 h-[52px]">
               <TabsList className="h-8 p-0 border rounded-md">
                 <TabsTrigger
                   value="preview"
@@ -65,7 +65,11 @@ const ProjectView = ({ projectId }: {projectId: string}) => {
               </TabsList>
               <div className="ml-auto flex items-center gap-x-2">
                 {!hasProAccess && (
-                  <Button size={"lg"} variant={"secondary"} className="bg-green-500">
+                  <Button
+                    size={"lg"}
+                    variant={"secondary"}
+                    className="bg-green-500"
+                  >
                     <Link href={"/pricing"}>
                       <CrownIcon className="h-3 w-4 mr-2" />
                       Upgrade

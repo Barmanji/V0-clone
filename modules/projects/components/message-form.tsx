@@ -1,10 +1,15 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import TextAreaAutosize from "react-textarea-autosize";
-import { ArrowUpIcon} from "lucide-react";
+import { ArrowUpIcon, Info } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import z from "zod";
 import { useCreateMessages } from "@/modules/messages/hooks/message";
 import { toast } from "sonner";
@@ -24,10 +29,8 @@ const formSchema = z.object({
 const MessageForm = ({ projectId }: { projectId: string }) => {
   const [isFocused, setIsFocused] = useState(false);
 
-
   const { mutateAsync, isPending, isError } = useCreateMessages(projectId);
-  const {data:usage} = useStatus()
-
+  const { data: usage } = useStatus();
 
   const showUsage = !!usage; // this changes any value to bool
   const {
@@ -64,7 +67,7 @@ const MessageForm = ({ projectId }: { projectId: string }) => {
         className={cn(
           "relative border p-4 pt-1 rounded-xl bg-sidebar dark:bg-sidebar transition-all",
           isFocused && "shadow-xs",
-          showUsage && "rounded-t-none"
+          showUsage && "rounded-t-none",
         )}
       >
         <TextAreaAutosize
@@ -77,7 +80,7 @@ const MessageForm = ({ projectId }: { projectId: string }) => {
           maxRows={8}
           className={cn(
             "pt-4 resize-none border-none w-full outline-none bg-transparent",
-            isPending && "opacity-50"
+            isPending && "opacity-50",
           )}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -101,8 +104,8 @@ const MessageForm = ({ projectId }: { projectId: string }) => {
           <Button
             className={cn(
               "size-8 rounded-full  bg-green-600",
-            isButtonDisabled && "bg-muted-foreground border")
-            }
+              isButtonDisabled && "bg-muted-foreground border",
+            )}
             disabled={isButtonDisabled}
             type="submit"
           >
@@ -114,6 +117,20 @@ const MessageForm = ({ projectId }: { projectId: string }) => {
           </Button>
         </div>
       </form>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground py-0.5">
+        <Tooltip>
+          <TooltipTrigger>
+            <Info className="size-3.5 shrink-0 cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent>
+            Default AI model is gpt-4o-mini,or gemini-3.5-flash.
+          </TooltipContent>
+        </Tooltip>
+        <span className="whitespace-nowrap">
+          My budget only allowed for a bargain-bin AI, but the ideas are
+          strictly premium.
+        </span>
+      </div>
     </div>
   );
 };

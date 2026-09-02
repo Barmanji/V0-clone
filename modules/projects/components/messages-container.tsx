@@ -95,7 +95,6 @@ const MessagesContainer = ({
               key={message.id}
               content={message.content}
               role={message.role}
-              // TODO: Get fragment logic
               fragment={message.fragments}
               createdAt={message.createdAt}
               isActiveFragment={activeFragment?.id === message.fragments?.id}

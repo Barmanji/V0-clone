@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useGetProjects } from "@/modules/projects/hooks/create-and-getProjectbyId";
@@ -42,36 +41,43 @@ const ProjectList = () => {
     return null;
   }
 
+  // Card classes separated for cleaner code
+  const cardStyles =
+    "group transition-all duration-300 cursor-pointer bg-card dark:bg-zinc-900/30 backdrop-blur-sm overflow-hidden " +
+    // Light mode border & shadow
+    "border border-slate-200/80 shadow-sm hover:shadow-md hover:border-emerald-500/50 " +
+    // Dark mode overrides
+    "dark:border-zinc-800/50 dark:shadow-none dark:hover:border-emerald-500/50";
+
   return (
     <div className="w-full mt-16">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">Your Projects</h2>
+      <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-foreground">
+        Your Projects
+      </h2>
 
       {/* Desktop Grid View */}
       <div className="hidden lg:grid grid-cols-3 gap-4 max-w-6xl mx-auto">
         {projects.map((project) => (
-            <Link href={`/projects/${project.id}`} key={project.id}>
-          <Card
-            key={project.id}
-            className="group hover:shadow-xl transition-all duration-300 border-zinc-800/50 hover:border-emerald-500/50 cursor-pointer bg-zinc-900/30 backdrop-blur-sm overflow-hidden"
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-2.5 bg-emerald-500/10 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
-                  <FolderKanban className="w-5 h-5 text-emerald-500" />
+          <Link href={`/projects/${project.id}`} key={project.id} className="block">
+            <Card className={cardStyles}>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="p-2.5 bg-emerald-500/10 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
+                    <FolderKanban className="w-5 h-5 text-emerald-500" />
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
                 </div>
-                <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
-              </div>
-              <CardTitle className="text-lg text-zinc-100 group-hover:text-emerald-400 transition-colors line-clamp-1">
-                {project.name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-zinc-400">
-                <Calendar className="w-3.5 h-3.5 mr-2" />
-                <span>{formatDate(project.createdAt)}</span>
-              </div>
-            </CardContent>
-          </Card>
+                <CardTitle className="text-lg text-card-foreground group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">
+                  {project.name}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Calendar className="w-3.5 h-3.5 mr-2" />
+                  <span>{formatDate(project.createdAt)}</span>
+                </div>
+              </CardContent>
+            </Card>
           </Link>
         ))}
       </div>
@@ -87,33 +93,33 @@ const ProjectList = () => {
         >
           <CarouselContent className="-ml-4">
             {projects.map((project) => (
-              <Link href={`/projects/${project.id}`} key={project.id}>
               <CarouselItem key={project.id} className="pl-4 md:basis-1/2">
-                <Card className="group hover:shadow-xl transition-all duration-300 border-zinc-800/50 hover:border-emerald-500/50 cursor-pointer bg-zinc-900/30 backdrop-blur-sm">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="p-2.5 bg-emerald-500/10 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
-                        <FolderKanban className="w-5 h-5 text-emerald-500" />
+                <Link href={`/projects/${project.id}`} className="block">
+                  <Card className={cardStyles}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="p-2.5 bg-emerald-500/10 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
+                          <FolderKanban className="w-5 h-5 text-emerald-500" />
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
                       </div>
-                      <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
-                    </div>
-                    <CardTitle className="text-lg text-zinc-100 group-hover:text-emerald-400 transition-colors line-clamp-1">
-                      {project.name}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center text-sm text-zinc-400">
-                      <Calendar className="w-3.5 h-3.5 mr-2" />
-                      <span>{formatDate(project.createdAt)}</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <CardTitle className="text-lg text-card-foreground group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">
+                        {project.name}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Calendar className="w-3.5 h-3.5 mr-2" />
+                        <span>{formatDate(project.createdAt)}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               </CarouselItem>
-              </Link>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100" />
-          <CarouselNext className="border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100" />
+          <CarouselPrevious />
+          <CarouselNext />
         </Carousel>
       </div>
     </div>

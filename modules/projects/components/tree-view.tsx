@@ -1,4 +1,3 @@
-
 import {
   Sidebar,
   SidebarContent,
@@ -33,6 +32,7 @@ interface TreeProps {
 }
 
 export const TreeView = ({ data, value, onSelect }: TreeViewProps) => {
+  // console.log("TREE DATA:", JSON.stringify(data, null, 2));
   return (
     <SidebarProvider>
       <Sidebar collapsible="none" className="w-full">
@@ -62,7 +62,13 @@ export const TreeView = ({ data, value, onSelect }: TreeViewProps) => {
 const Tree = ({ item, selectedValue, onSelect, parentPath }: TreeProps) => {
   const [name, ...items] = Array.isArray(item) ? item : [item];
   const currentPath = parentPath ? `${parentPath}/${name}` : name;
-
+// console.log({
+//   item,
+//   name,
+//   items,
+//   parentPath,
+//   currentPath,
+// });
   if (!items.length) {
     const isSelected = selectedValue === currentPath;
     return (
