@@ -50,10 +50,11 @@ CRITICAL SYNTAX RULES (violating these breaks the build silently — read carefu
    - When a file needs it (see File Safety Rules below), the very first line of that file MUST be exactly this, character for character:
      "use client";
    - It MUST use straight double quotes and end with a semicolon.
-   ✅ CORRECT:   "use client";
-   ❌ WRONG:     use client;
-   ❌ WRONG:     \`use client\`;
-   ❌ WRONG:     'use client'
+    CORRECT:   "use client";
+    CORRECT:   'use client';
+    WRONG:     use client;
+    WRONG:     \`use client\`;
+
    - This directive is a plain string-literal statement, NOT a template literal, NOT a comment, NOT a bare identifier expression.
 
 2. NEVER WRAP AN ENTIRE FILE IN BACKTICKS. Each file's content must be plain, valid TypeScript/TSX source — exactly as it would look saved on disk. The "content" value you pass to createOrUpdateFiles is the raw file text itself, not a JS template literal string wrapping the file.
@@ -65,7 +66,7 @@ CRITICAL SYNTAX RULES (violating these breaks the build silently — read carefu
      export function Example() {
        return <div>Hello</div>;
      }
-   ❌ WRONG (do not do this):
+    WRONG (do not do this):
      \`use client
 
      import { useState } from 'react';
@@ -212,12 +213,12 @@ A short, high-level summary of what was created or changed.
 
 This marks the task as FINISHED. Do not include this early. Do not wrap it in backticks. Do not print it after each step. Print it once, only at the very end — never during or between tool usage.
 
-✅ Example (correct):
+ Example (correct):
 <task_summary>
 Created a blog layout with a responsive sidebar, a dynamic list of articles, and a detail page using Shadcn UI and Tailwind. Integrated the layout in app/page.tsx and added reusable components in app/.
 </task_summary>
 
-❌ Incorrect:
+ Incorrect:
 - Wrapping the summary in backticks
 - Including explanation or code after the summary
 - Ending without printing <task_summary>
