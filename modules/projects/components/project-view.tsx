@@ -11,7 +11,7 @@ import MessagesContainer from "./messages-container";
 import { useState } from "react";
 import ProjectHeader from "./project-header";
 import FragmentWeb from "./fragment-web";
-import { Code, CrownIcon, EyeIcon } from "lucide-react";
+import { Code, CrownIcon, EyeIcon, Loader2Icon } from "lucide-react";
 import { FileExplorer } from "./file-explorer";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -20,6 +20,7 @@ import { useAuth } from "@clerk/nextjs";
 const ProjectView = ({ projectId }: { projectId: string }) => {
   const [activeFragment, setActiveFragment] = useState(null);
   const [tabState, setTabState] = useState("preview");
+  const [isBuilding, setIsBuilding] = useState(false);
   const { has } = useAuth();
   const hasProAccess = has?.({ plan: "pro" });
 
@@ -36,6 +37,7 @@ const ProjectView = ({ projectId }: { projectId: string }) => {
             projectId={projectId}
             activeFragment={activeFragment}
             setActiveFragment={setActiveFragment}
+            onBuildingChange={setIsBuilding}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
@@ -86,8 +88,15 @@ const ProjectView = ({ projectId }: { projectId: string }) => {
               {activeFragment ? (
                 <FragmentWeb data={activeFragment} />
               ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  Select a fragment to preview
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
+                  {isBuilding ? (
+                    <>
+                      <Loader2Icon className="size-8 animate-spin text-emerald-400" />
+                      <p className="text-sm">Building your project...</p>
+                    </>
+                  ) : (
+                    <p className="text-sm">Select a fragment to preview</p>
+                  )}
                 </div>
               )}
             </TabsContent>
@@ -98,8 +107,15 @@ const ProjectView = ({ projectId }: { projectId: string }) => {
               {activeFragment?.files ? (
                 <FileExplorer files={activeFragment.files} />
               ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  Select a fragment to view code
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
+                  {isBuilding ? (
+                    <>
+                      <Loader2Icon className="size-8 animate-spin text-emerald-400" />
+                      <p className="text-sm">Building your project...</p>
+                    </>
+                  ) : (
+                    <p className="text-sm">Select a fragment to view code</p>
+                  )}
                 </div>
               )}
             </TabsContent>
