@@ -5,7 +5,11 @@ import { UserButton } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 
 
-export default function UserControl({ showName }: any) {
+interface UserControlProps {
+  showName?: boolean;
+}
+
+export default function UserControl({ showName }: UserControlProps) {
   const currentTheme = useCurrentTheme();
 
   return (

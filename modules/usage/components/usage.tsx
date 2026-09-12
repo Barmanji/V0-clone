@@ -40,6 +40,8 @@ export const Usage = () => {
             {formatDuration(
               intervalToDuration({
                 start: new Date(),
+                // Reset countdown is inherently wall-clock dependent.
+                // eslint-disable-next-line react-hooks/purity
                 end: new Date(Date.now() + msBeforeNext),
               }),
               { format: ["months", "days", "hours"] },

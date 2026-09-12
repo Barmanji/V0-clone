@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import {
   Dialog,
   DialogContent,
@@ -38,12 +38,15 @@ export function ModelSelector({ config, onSelect }: ModelSelectorProps) {
   const [open, setOpen] = useState(false);
   const [expandedProvider, setExpandedProvider] = useState<Provider | null>(null);
   const [apiKeyInputs, setApiKeyInputs] = useState<Record<string, string>>({});
-  const [mounted, setMounted] = useState(false);
   const [validating, setValidating] = useState<Provider | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Hydration-safe "is client" flag without setState-in-effect:
+  // server snapshot = false, client snapshot = true.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   const currentModel = MODELS.find((m) => m.id === config.modelId);
 

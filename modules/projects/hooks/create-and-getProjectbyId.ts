@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createProject, getProjectById, getProjects, triggerCodeAgent, applyEnhancedPrompt } from "../actions";
+import type { AgentTriggerPayload, CreateProjectPayload } from "@/modules/types";
 
 export const useGetProjects = () => {
     return useQuery({
@@ -11,7 +12,7 @@ export const useGetProjects = () => {
 export const useCreateProject = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (payload: { value: string; modelConfig?: any }) => createProject(payload),
+        mutationFn: (payload: CreateProjectPayload) => createProject(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["projects"] });
             queryClient.invalidateQueries({ queryKey: ["status"] });
@@ -22,7 +23,7 @@ export const useCreateProject = () => {
 export const useTriggerCodeAgent = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (payload: { projectId: string; value: string; modelConfig?: any }) =>
+        mutationFn: (payload: AgentTriggerPayload) =>
             triggerCodeAgent(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["messages"] });
@@ -33,8 +34,8 @@ export const useTriggerCodeAgent = () => {
 export const useApplyEnhancedPrompt = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (payload: { projectId: string; value: string; modelConfig?: any }) =>
-        applyEnhancedPrompt(payload),
+        mutationFn: (payload: AgentTriggerPayload) =>
+            applyEnhancedPrompt(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["messages"] });
         }

@@ -23,8 +23,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { ProjectFiles } from "@/modules/types";
 
-const FileBreadcrumb = ({ filePath }) => {
+interface FileBreadcrumbProps {
+  filePath: string;
+}
+
+const FileBreadcrumb = ({ filePath }: FileBreadcrumbProps) => {
   const pathSegments = filePath.split("/");
   const maxSegments = 4;
 
@@ -78,7 +83,7 @@ const FileBreadcrumb = ({ filePath }) => {
 function getLanguageFromExtension(filename: string) {
   const extension = filename.split(".").pop()?.toLowerCase();
 
-  const languageMap = {
+  const languageMap: Record<string, string> = {
     js: "javascript",
     jsx: "jsx",
     ts: "typescript",
@@ -90,12 +95,16 @@ function getLanguageFromExtension(filename: string) {
     md: "markdown",
   };
 
-  return languageMap[extension] || "text";
+  return languageMap[extension ?? ""] || "text";
 }
 
-export const FileExplorer = ({ files }) => {
+interface FileExplorerProps {
+  files: ProjectFiles;
+}
+
+export const FileExplorer = ({ files }: FileExplorerProps) => {
   const [copied, setCopied] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(() => {
+  const [selectedFile, setSelectedFile] = useState<string | null>(() => {
     const fileKeys = Object.keys(files);
     return fileKeys.length > 0 ? fileKeys[0] : null;
   });
@@ -105,7 +114,7 @@ export const FileExplorer = ({ files }) => {
   }, [files]);
 
   const handleFileSelect = useCallback(
-    (filePath) => {
+    (filePath: string) => {
       if (files[filePath]) {
         setSelectedFile(filePath);
       }

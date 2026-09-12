@@ -7,13 +7,15 @@ import {
   setModelConfig,
   clearModelConfig,
   getProviderKeys,
+  DEFAULT_MODEL_ID,
+  DEFAULT_PROVIDER,
   type ModelConfig,
   type Provider,
 } from "@/lib/models";
 
 const FALLBACK_CONFIG: ModelConfig = {
-  modelId: "gpt-4o-mini",
-  provider: "openai",
+  modelId: DEFAULT_MODEL_ID,
+  provider: DEFAULT_PROVIDER,
 };
 
 const getSnapshot = () => getModelConfig() || FALLBACK_CONFIG;

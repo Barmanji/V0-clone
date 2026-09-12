@@ -57,15 +57,12 @@ export const useAudioDevices = () => {
 
   const loadDevicesWithoutPermission = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
-
-      const deviceList = await navigator.mediaDevices.enumerateDevices();
-      const audioInputs = deviceList.filter(
+      const audioInputs = (await navigator.mediaDevices.enumerateDevices()).filter(
         (device) => device.kind === "audioinput"
       );
 
       setDevices(audioInputs);
+      setError(null);
     } catch (caughtError) {
       const message =
         caughtError instanceof Error
@@ -117,6 +114,8 @@ export const useAudioDevices = () => {
   }, [loading]);
 
   useEffect(() => {
+    // One-shot initial device enumeration; results land asynchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDevicesWithoutPermission();
   }, [loadDevicesWithoutPermission]);
 

@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "docker compose up -d && next dev",
+    "dev": "docker compose up -d v0-postgres && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

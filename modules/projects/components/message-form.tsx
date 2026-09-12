@@ -22,6 +22,8 @@ import { useStatus } from "@/modules/usage/hooks/usage";
 import { Spinner } from "@/components/ui/spinner";
 import { ModelSelector } from "@/modules/model-select/components/model-selector";
 import { useModel } from "@/modules/model-select/hooks/use-model";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   content: z
@@ -30,6 +32,8 @@ const formSchema = z.object({
     .max(1000, "Message is too long"),
 });
 
+type MessageFormValues = z.infer<typeof formSchema>;
+
 interface MessageFormProps {
   projectId: string;
   disabled?: boolean;
@@ -37,6 +41,8 @@ interface MessageFormProps {
 
 const MessageForm = ({ projectId, disabled = false }: MessageFormProps) => {
   const [isFocused, setIsFocused] = useState(false);
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
 
   const { mutateAsync, isPending } = useSendMessage(projectId);
   const { data: usage } = useStatus();
@@ -57,7 +63,15 @@ const MessageForm = ({ projectId, disabled = false }: MessageFormProps) => {
     mode: "onChange",
   });
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: MessageFormValues) => {
+    if (isSignedIn === false) {
+      toast.info("Sign in to continue building");
+      router.push(
+        `/sign-in?redirect_url=${encodeURIComponent(`/projects/${projectId}`)}`,
+      );
+      return;
+    }
+
     try {
       // Follow-up messages trigger the code agent exactly once.
       // (The initial build is triggered once by the question flow in

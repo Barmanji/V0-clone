@@ -14,14 +14,19 @@ export interface GeneratedQuestion {
   options: QuestionOption[];
 }
 
+interface ParsedQuestion {
+  question?: string;
+  options?: Array<{ label?: string; description?: string }>;
+}
+
 export const generateQuestions = async (
   prompt: string,
   modelConfig?: AgentModelConfig
 ): Promise<GeneratedQuestion[]> => {
   try {
     // Use the same model resolution as the code agent — falls back to
-    // gpt-4o-mini on the server's OPENAI_API_KEY, or uses the user's
-    // selected provider + their API key.
+    // DEFAULT_MODEL_ID (lib/models.ts) on the server's OPENAI_API_KEY, or uses
+    // the user's selected provider + their API key.
     const model = getModelFromConfig(modelConfig);
 
     const questionAgent = createAgent({
@@ -45,16 +50,17 @@ export const generateQuestions = async (
       typeof textContent.content === "string"
         ? textContent.content
         : Array.isArray(textContent.content)
-          ? textContent.content.map((c: any) => (typeof c === "string" ? c : c.text || "")).join("")
+          ? textContent.content.map((c) => (typeof c === "string" ? c : c.text || "")).join("")
           : "";
 
     const cleaned = rawText.replace(/```json\n?|\n?```/g, "").trim();
-    const parsed = JSON.parse(cleaned);
+    const parsed: unknown = JSON.parse(cleaned);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map((q: any) => ({
+      const questionList: ParsedQuestion[] = parsed;
+      return questionList.map((q) => ({
         question: q.question || "Any preferences?",
-        options: Array.isArray(q.options)
-          ? q.options.map((o: any) => ({
+        options: Array.isArray(q.options) && q.options.length > 0
+          ? q.options.map((o) => ({
               label: o.label || "Option",
               description: o.description || "",
             }))
@@ -105,7 +111,7 @@ export const enhancePrompt = async (
       typeof textContent.content === "string"
         ? textContent.content
         : Array.isArray(textContent.content)
-          ? textContent.content.map((c: any) => (typeof c === "string" ? c : c.text || "")).join("")
+          ? textContent.content.map((c) => (typeof c === "string" ? c : c.text || "")).join("")
           : "";
 
     return rawText.trim() || originalPrompt;

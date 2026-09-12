@@ -1,0 +1,33 @@
+# Dependencies / build output
+node_modules
+.next
+dist
+.out
+.turbo
+tsconfig.tsbuildinfo
+
+# Local env & secrets
+.env
+.env.*
+!.env.example
+
+# VCS
+.git
+.gitignore
+
+# Docker/CI
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Editor / OS cruft
+.vscode
+.idea
+.DS_Store
+*.log
+
+# Generated / transient
+coverage
+.vercel
+.proxy-*
+sandbox-templates/node_modules

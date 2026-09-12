@@ -6,15 +6,17 @@ import { ArrowUpIcon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import z from "zod";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCreateProject } from "@/modules/projects/hooks/create-and-getProjectbyId";
-import { Show } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { ModelSelector } from "@/modules/model-select/components/model-selector";
 import { useModel } from "@/modules/model-select/hooks/use-model";
+
+const PENDING_PROMPT_KEY = "v0-clone-pending-prompt";
 
 const formSchema = z.object({
   content: z
@@ -22,6 +24,8 @@ const formSchema = z.object({
     .min(1, "Project description is required")
     .max(1000, "Description is too long"),
 });
+
+type ProjectFormValues = z.infer<typeof formSchema>;
 
 const PROJECT_TEMPLATES = [
   {
@@ -77,8 +81,9 @@ const PROJECT_TEMPLATES = [
 const ProjectForm = () => {
   const [isFocused, setIsFocused] = useState(false);
   const router = useRouter();
-  const { mutateAsync, isPending } = useCreateProject();
   const { config: modelConfig, updateModel } = useModel();
+  const { mutateAsync, isPending } = useCreateProject();
+  const { isSignedIn } = useAuth();
   const {
     register,
     handleSubmit,
@@ -94,17 +99,32 @@ const ProjectForm = () => {
     mode: "onChange",
   });
 
-  const handleTemplate = (prompt: String | any) => {
+  useEffect(() => {
+    const pendingPrompt = window.sessionStorage.getItem(PENDING_PROMPT_KEY);
+    if (pendingPrompt) {
+      setValue("content", pendingPrompt, { shouldValidate: true });
+      window.sessionStorage.removeItem(PENDING_PROMPT_KEY);
+    }
+  }, [setValue]);
+
+  const handleTemplate = (prompt: string) => {
     setValue("content", prompt, { shouldValidate: true });
   };
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: ProjectFormValues) => {
+    if (isSignedIn === false) {
+      window.sessionStorage.setItem(PENDING_PROMPT_KEY, values.content);
+      toast.info("Sign in to continue building");
+      router.push("/sign-in?redirect_url=/");
+      return;
+    }
+
     try {
       const res = await mutateAsync({
         value: values.content,
         modelConfig,
       });
-      router.push(`/projects/${(res as any).id}`);
+      router.push(`/projects/${res.id}`);
       toast.success("Project created successfully");
       reset();
     } catch (error) {
@@ -159,7 +179,6 @@ const ProjectForm = () => {
           isFocused && "shadow-lg ring-2 ring-primary/20",
         )}
       >
-        <Show when={"signed-in"}>
         <TextAreaAutosize
           {...register("content")}
           disabled={isPending}
@@ -179,20 +198,6 @@ const ProjectForm = () => {
             }
           }}
         />
-        </Show>
-        <Show when={"signed-out"}>
-        <TextAreaAutosize
-          disabled={!isPending}
-          placeholder="Please login to chat"
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          minRows={3}
-          maxRows={5}
-          className={cn(
-            "pt-4 resize-none border-none w-full outline-none bg-transparent cursor-not-allowed",
-          )}
-        />
-        </Show>
         {errors.content && (
           <p className="text-xs text-destructive px-1 pt-1">
             {errors.content.message}
