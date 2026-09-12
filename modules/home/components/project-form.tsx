@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCreateProject } from "@/modules/projects/hooks/create-and-getProjectbyId";
 import { Show } from "@clerk/nextjs";
+import { ModelSelector } from "@/modules/model-select/components/model-selector";
+import { useModel } from "@/modules/model-select/hooks/use-model";
 
 const formSchema = z.object({
   content: z
@@ -72,10 +74,11 @@ const PROJECT_TEMPLATES = [
   },
 ];
 
-const ProjectForm =  () => {
+const ProjectForm = () => {
   const [isFocused, setIsFocused] = useState(false);
   const router = useRouter();
   const { mutateAsync, isPending } = useCreateProject();
+  const { config: modelConfig, updateModel } = useModel();
   const {
     register,
     handleSubmit,
@@ -97,11 +100,13 @@ const ProjectForm =  () => {
 
   const onSubmit = async (values: any) => {
     try {
-      const res = await mutateAsync(values.content);
+      const res = await mutateAsync({
+        value: values.content,
+        modelConfig,
+      });
       router.push(`/projects/${(res as any).id}`);
       toast.success("Project created successfully");
       reset();
-
     } catch (error) {
       toast.error((error as Error).message || "Failed to create project");
     }
@@ -112,7 +117,7 @@ const ProjectForm =  () => {
 
   return (
     <div className="space-y-8">
-      {/* Templates Grid — unchanged */}
+      {/* Templates Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {PROJECT_TEMPLATES.map((template, index) => (
           <button
@@ -134,7 +139,7 @@ const ProjectForm =  () => {
         ))}
       </div>
 
-      {/* Divider — unchanged */}
+      {/* Divider */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
@@ -146,7 +151,7 @@ const ProjectForm =  () => {
         </div>
       </div>
 
-      {/* Form — no <Form>/<FormField> wrapper needed */}
+      {/* Form */}
       <form
         onSubmit={handleSubmit(onSubmit)}
         className={cn(
@@ -168,7 +173,6 @@ const ProjectForm =  () => {
             isPending && "opacity-50",
           )}
           onKeyDown={(e) => {
-            // TODO: return Toast popup when unauth
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               handleSubmit(onSubmit)(e);
@@ -178,7 +182,7 @@ const ProjectForm =  () => {
         </Show>
         <Show when={"signed-out"}>
         <TextAreaAutosize
-          disabled= {!isPending}
+          disabled={!isPending}
           placeholder="Please login to chat"
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -196,26 +200,31 @@ const ProjectForm =  () => {
         )}
 
         <div className="flex gap-x-2 items-end justify-between pt-2">
-          <div className="text-[10px] text-muted-foreground font-mono">
-            <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-              <span>&#8984;</span>Enter
-            </kbd>
-            &nbsp; to submit
+          <div className="flex items-center gap-2">
+            <ModelSelector config={modelConfig} onSelect={updateModel} />
           </div>
-          <Button
-            className={cn(
-              "size-8 rounded-full",
-              isButtonDisabled && "bg-muted-foreground border",
-            )}
-            disabled={isButtonDisabled}
-            type="submit"
-          >
-            {isPending ? (
-              <Spinner className="size-4 animate-spin" />
-            ) : (
-              <ArrowUpIcon className="size-4" />
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="text-[10px] text-muted-foreground font-mono">
+              <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                <span>&#8984;</span>Enter
+              </kbd>
+              &nbsp; to submit
+            </div>
+            <Button
+              className={cn(
+                "size-8 rounded-full",
+                isButtonDisabled && "bg-muted-foreground border",
+              )}
+              disabled={isButtonDisabled}
+              type="submit"
+            >
+              {isPending ? (
+                <Spinner className="size-4 animate-spin" />
+              ) : (
+                <ArrowUpIcon className="size-4" />
+              )}
+            </Button>
+          </div>
         </div>
       </form>
     </div>
