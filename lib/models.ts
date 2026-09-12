@@ -1,5 +1,12 @@
 export type Provider = "openai" | "anthropic" | "google" | "xai";
 
+// Single source of truth for the default model. The model selector, code
+// agent, and question-flow fallbacks all read these — change the default in
+// exactly this one place. The expected setup is an OpenAI-compatible completion
+// via the server's OPENAI_API_KEY; the rest of the catalog is bring-your-own-key.
+export const DEFAULT_MODEL_ID = "gpt-4o-mini";
+export const DEFAULT_PROVIDER: Provider = "openai";
+
 export interface ModelConfig {
   modelId: string;
   provider: Provider;
@@ -19,9 +26,9 @@ export interface ModelOption {
 export const MODELS: ModelOption[] = [
   // OpenAI
   {
-    id: "gpt-4o-mini",
+    id: DEFAULT_MODEL_ID,
     name: "GPT-4o Mini",
-    provider: "openai",
+    provider: DEFAULT_PROVIDER,
     description: "Fast & affordable (default)",
     requiresApiKey: false,
     contextWindow: "128K",
@@ -190,7 +197,7 @@ const PROVIDER_KEYS_KEY = "v0-clone-provider-keys";
 // In-memory fallbacks so config still works when localStorage is
 // unavailable or blocked (e.g. sandboxed iframes, private mode).
 let memoryConfig: ModelConfig | null = null;
-let memoryProviderKeys: Partial<Record<Provider, string>> = {};
+const memoryProviderKeys: Partial<Record<Provider, string>> = {};
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
@@ -278,7 +285,7 @@ export function setProviderKey(provider: Provider, key: string): void {
 
 export function getDefaultModelConfig(): ModelConfig {
   return {
-    modelId: "gpt-4o-mini",
-    provider: "openai",
+    modelId: DEFAULT_MODEL_ID,
+    provider: DEFAULT_PROVIDER,
   };
 }
