@@ -47,6 +47,9 @@ const ShimmerComponent = ({
     [children, spread]
   );
 
+  // getMotionComponent returns a module-level cached (stable identity) component;
+  // the render-time lookup is required because the tag is dynamic.
+  /* eslint-disable react-hooks/static-components */
   return (
     <MotionComponent
       animate={{ backgroundPosition: "0% center" }}
@@ -72,6 +75,7 @@ const ShimmerComponent = ({
       {children}
     </MotionComponent>
   );
+  /* eslint-enable react-hooks/static-components */
 };
 
 export const Shimmer = memo(ShimmerComponent);

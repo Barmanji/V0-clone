@@ -5,6 +5,7 @@ import db from "@/lib/db";
 import { MessageRole, MessageType } from "@/lib/generated/prisma/enums";
 import { getCurrentUser } from "@/modules/auth/actions";
 import { consumeCredits } from "@/lib/usage";
+import type { AgentTriggerPayload, CreateProjectPayload } from "@/modules/types";
 
 export const getProjects = async () => {
   const user = await getCurrentUser();
@@ -51,7 +52,7 @@ function generateProjectName(prompt: string): string {
  * Creates a project with the user's initial message.
  * Does NOT trigger the code agent — use triggerCodeAgent() separately.
  */
-export const createProject = async (payload: { value: string; modelConfig?: any }) => {
+export const createProject = async (payload: CreateProjectPayload) => {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -92,11 +93,7 @@ export const createProject = async (payload: { value: string; modelConfig?: any 
  * Triggers the code agent for a project with the given prompt.
  * Call this after questions are answered (or skipped).
  */
-export const triggerCodeAgent = async (payload: {
-  projectId: string;
-  value: string;
-  modelConfig?: any;
-}) => {
+export const triggerCodeAgent = async (payload: AgentTriggerPayload) => {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -122,11 +119,7 @@ export const triggerCodeAgent = async (payload: {
  * triggers the code agent exactly once. This keeps the chat showing a single
  * user message (the refined prompt) instead of an echo of the original.
  */
-export const applyEnhancedPrompt = async (payload: {
-  projectId: string;
-  value: string;
-  modelConfig?: any;
-}) => {
+export const applyEnhancedPrompt = async (payload: AgentTriggerPayload) => {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -165,7 +158,7 @@ export const applyEnhancedPrompt = async (payload: {
   return updatedMessage;
 };
 
-export const getProjectById = async (projectId: any) => {
+export const getProjectById = async (projectId: string) => {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 

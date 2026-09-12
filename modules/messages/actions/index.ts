@@ -5,12 +5,13 @@ import db from "../../../lib/db";
 import { inngest } from "../../../inngest/client";
 import { getCurrentUser } from "@/modules/auth/actions";
 import { consumeCredits } from "@/lib/usage";
+import type { CreateProjectPayload, SendMessagePayload } from "@/modules/types";
 
-export const createMessages = async (payload: { value: string; projectId: string; modelConfig?: any }) => {
+export const createMessages = async (payload: CreateProjectPayload & { projectId: string }) => {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
-  const { value, projectId, modelConfig } = payload;
+  const { value, projectId } = payload;
 
   // Verify project ownership
   const project = await db.project.findUnique({
@@ -55,12 +56,7 @@ export const createMessages = async (payload: { value: string; projectId: string
  * Sends a user message to a project.
  * Used during question flow for user answers, and for regular follow-up messages.
  */
-export const sendMessage = async (payload: {
-  projectId: string;
-  value: string;
-  modelConfig?: any;
-  triggerAgent?: boolean;
-}) => {
+export const sendMessage = async (payload: SendMessagePayload) => {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 

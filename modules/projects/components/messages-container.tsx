@@ -17,12 +17,13 @@ import { useTriggerCodeAgent, useApplyEnhancedPrompt } from "@/modules/projects/
 import { useModel } from "@/modules/model-select/hooks/use-model";
 import { toast } from "sonner";
 import type { GeneratedQuestion } from "@/modules/questions/actions";
+import type { Fragment } from "@/lib/generated/prisma/client";
 import Image from "next/image";
 
 interface MessagesContainerProps {
   projectId: string;
-  activeFragment: any;
-  setActiveFragment: any;
+  activeFragment: Fragment | null;
+  setActiveFragment: (fragment: Fragment | null) => void;
   onBuildingChange?: (isBuilding: boolean) => void;
 }
 
@@ -34,7 +35,8 @@ const MessagesContainer = ({
 }: MessagesContainerProps) => {
   const queryClient = useQueryClient();
   const bottomRef = useRef<HTMLDivElement>(null);
-  const lastAssistantMessageIdRef: any = useRef(null);
+  const lastAssistantMessageIdRef = useRef<string | null>(null);
+  const questionFlowStartedRef = useRef(false);
 
   // Question flow state
   const [questionFlow, setQuestionFlow] = useState<{
@@ -78,38 +80,39 @@ const MessagesContainer = ({
   useEffect(() => {
     if (!messages || messages.length !== 1) return;
     if (messages[0].role !== MessageRole.USER) return;
-    if (questionFlow.active || questionFlow.hasGenerated) return;
+    if (questionFlowStartedRef.current) return;
 
     const userPrompt = messages[0].content;
 
+    questionFlowStartedRef.current = true;
     enhancementStartedRef.current = false;
-    setQuestionFlow((prev) => ({ ...prev, hasGenerated: true }));
 
     generateQuestionsMutation.mutate(
       { prompt: userPrompt, modelConfig },
       {
-      onSuccess: (questions) => {
-        if (questions && questions.length > 0) {
-          setQuestionFlow({
-            active: true,
-            questions,
-            currentStep: 0,
-            answers: {},
-            enhancing: false,
-            hasGenerated: true,
+        onSuccess: (questions) => {
+          if (questions && questions.length > 0) {
+            setQuestionFlow({
+              active: true,
+              questions,
+              currentStep: 0,
+              answers: {},
+              enhancing: false,
+              hasGenerated: true,
+            });
+          }
+        },
+        onError: () => {
+          // If question generation fails, skip and trigger agent directly
+          triggerCodeAgentMutation.mutate({
+            projectId,
+            value: userPrompt,
+            modelConfig,
           });
-        }
-      },
-      onError: () => {
-        // If question generation fails, skip and trigger agent directly
-        triggerCodeAgentMutation.mutate({
-          projectId,
-          value: userPrompt,
-          modelConfig,
-        });
-      },
-    });
-  }, [messages, projectId, modelConfig, questionFlow.hasGenerated]);
+        },
+      }
+    );
+  }, [messages, projectId, modelConfig]);
 
   // Notify parent about building state
   useEffect(() => {
@@ -158,16 +161,6 @@ const MessagesContainer = ({
     []
   );
 
-  // Fire the enhancement exactly once when the last answer lands.
-  useEffect(() => {
-    if (!questionFlow.enhancing || enhancementStartedRef.current) return;
-    enhancementStartedRef.current = true;
-
-    const userPrompt = messages?.[0]?.content || "";
-    void triggerEnhancement(userPrompt, questionFlow.answers);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionFlow.enhancing, questionFlow.answers]);
-
   const triggerEnhancement = useCallback(
     async (originalPrompt: string, answers: Record<string, string>) => {
       try {
@@ -199,6 +192,16 @@ const MessagesContainer = ({
     },
     [modelConfig, projectId, enhancePromptMutation, applyEnhancedPromptMutation, triggerCodeAgentMutation]
   );
+
+  // Fire the enhancement exactly once when the last answer lands.
+  useEffect(() => {
+    if (!questionFlow.enhancing || enhancementStartedRef.current) return;
+    enhancementStartedRef.current = true;
+
+    const userPrompt = messages?.[0]?.content || "";
+    void triggerEnhancement(userPrompt, questionFlow.answers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionFlow.enhancing, questionFlow.answers]);
 
   const handleSkipAll = useCallback(() => {
     const userPrompt = messages?.[0]?.content || "";

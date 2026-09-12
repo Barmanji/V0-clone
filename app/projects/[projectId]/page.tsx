@@ -3,7 +3,7 @@ import React, { Suspense } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const Page = async ({ params }: any) => {
+const Page = async ({ params }: { params: Promise<{ projectId: string }> }) => {
   const { projectId } = await params;
 
   return (

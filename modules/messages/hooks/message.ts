@@ -1,7 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { createMessages, getMessages, sendMessage } from "../actions";
+import type { CreateProjectPayload, SendMessagePayload } from "@/modules/types";
 
-export const prefetchMessages = async (queryClient: any, projectId: string) => {
+export const prefetchMessages = async (queryClient: QueryClient, projectId: string) => {
   await queryClient.prefetchQuery({
     queryKey: ["messages", projectId],
     queryFn: () => getMessages(projectId),
@@ -14,7 +15,8 @@ export const useGetMessages = (projectId: string) => {
     queryKey: ["messages", projectId],
     queryFn: () => getMessages(projectId),
     staleTime: 10000,
-    refetchInterval: (data: any) => {
+    refetchInterval: (query) => {
+      const data = query.state.data;
       return data?.length ? 5000 : false;
     },
   });
@@ -23,17 +25,15 @@ export const useGetMessages = (projectId: string) => {
 export const useCreateMessages = (projectId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { value: string; modelConfig?: any }) =>
+    mutationFn: (payload: CreateProjectPayload) =>
       createMessages({ ...payload, projectId }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["messages", projectId]
       });
-      queryClient.invalidateQueries(
-        {
-          queryKey: ["status"],
-        }
-      )
+      queryClient.invalidateQueries({
+        queryKey: ["status"],
+      });
     },
   });
 };
@@ -41,11 +41,7 @@ export const useCreateMessages = (projectId: string) => {
 export const useSendMessage = (projectId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: {
-      value: string;
-      modelConfig?: any;
-      triggerAgent?: boolean;
-    }) =>
+    mutationFn: (payload: Omit<SendMessagePayload, "projectId">) =>
       sendMessage({
         ...payload,
         projectId,

@@ -6,7 +6,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-const FragmentWeb = ({ data }: any) => {
+import type { Fragment } from "@/lib/generated/prisma/client";
+
+interface FragmentWebProps {
+  data: Fragment;
+}
+
+const FragmentWeb = ({ data }: FragmentWebProps) => {
   const [fragmentKey, setFragmentKey] = useState(0);
   const [copied, setCopied] = useState(false);
 

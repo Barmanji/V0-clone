@@ -5,6 +5,8 @@ import {
   createTool,
   createNetwork,
   createState,
+  type TextMessage,
+  openai,
 } from "@inngest/agent-kit";
 import Sandbox from "@e2b/code-interpreter";
 import { z } from "zod";
@@ -64,10 +66,10 @@ export const codeAgentFunction = inngest.createFunction(
       return sandbox.sandboxId;
     });
     // Persistent mem
-    const previousMessages: any = await step.run(
+    const previousMessages: TextMessage[] = await step.run(
       "get-previous-messages",
       async () => {
-        const formattedMessages = [];
+        const formattedMessages: TextMessage[] = [];
 
         const messages = await db.message.findMany({
           where: {
@@ -289,14 +291,14 @@ export const codeAgentFunction = inngest.createFunction(
       name: "fragment-title-generator",
       description: "Generate a title for the fragment",
       system: FRAGMENT_TITLE_PROMPT,
-      model: gemini({ model: "gemini-3.5-flash-lite" }),
+      model: openai({ model: "gpt-3.5-turbo" }),
     });
 
     const responseGenerator = createAgent({
       name: "response-generator",
       description: "Generate a response for the fragment",
       system: RESPONSE_PROMPT,
-      model: gemini({ model: "gemini-3.5-flash" }),
+      model: openai({ model: "gpt-3.5-turbo" }),
     });
 
     const { output: fragmentTitleOutput } = await fragmentTitleGenerator.run(

@@ -164,6 +164,8 @@ export const CommitTimestamp = ({
   }, [date]);
 
   useEffect(() => {
+    // Relative timestamps are wall-clock based; deliberate one-shot state init.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     updateFormatted();
   }, [updateFormatted]);
 

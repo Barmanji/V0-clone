@@ -58,14 +58,23 @@ function Carousel({
     },
     plugins
   )
-  const [canScrollPrev, setCanScrollPrev] = React.useState(false)
-  const [canScrollNext, setCanScrollNext] = React.useState(false)
+  const [, setTick] = React.useState(0)
 
-  const onSelect = React.useCallback((api: CarouselApi) => {
+  // Subscribe to carousel events; state updates happen only inside the event
+  // handler, and canScrollPrev/Next stay derived from the api during render.
+  React.useEffect(() => {
     if (!api) return
-    setCanScrollPrev(api.canScrollPrev())
-    setCanScrollNext(api.canScrollNext())
-  }, [])
+    const onUpdate = () => setTick((t) => t + 1)
+    api.on("reInit", onUpdate)
+    api.on("select", onUpdate)
+    return () => {
+      api.off("reInit", onUpdate)
+      api.off("select", onUpdate)
+    }
+  }, [api])
+
+  const canScrollPrev = api?.canScrollPrev() ?? false
+  const canScrollNext = api?.canScrollNext() ?? false
 
   const scrollPrev = React.useCallback(() => {
     api?.scrollPrev()
@@ -92,17 +101,6 @@ function Carousel({
     if (!api || !setApi) return
     setApi(api)
   }, [api, setApi])
-
-  React.useEffect(() => {
-    if (!api) return
-    onSelect(api)
-    api.on("reInit", onSelect)
-    api.on("select", onSelect)
-
-    return () => {
-      api?.off("select", onSelect)
-    }
-  }, [api, onSelect])
 
   return (
     <CarouselContext.Provider

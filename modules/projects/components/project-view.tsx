@@ -16,9 +16,11 @@ import { FileExplorer } from "./file-explorer";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
+import type { Fragment } from "@/lib/generated/prisma/client";
+import type { ProjectFiles } from "@/modules/types";
 
 const ProjectView = ({ projectId }: { projectId: string }) => {
-  const [activeFragment, setActiveFragment] = useState(null);
+  const [activeFragment, setActiveFragment] = useState<Fragment | null>(null);
   const [tabState, setTabState] = useState("preview");
   const [isBuilding, setIsBuilding] = useState(false);
   const { has } = useAuth();
@@ -105,7 +107,7 @@ const ProjectView = ({ projectId }: { projectId: string }) => {
               className="flex-1 h-[calc(100%-4rem)] overflow-hidden"
             >
               {activeFragment?.files ? (
-                <FileExplorer files={activeFragment.files} />
+                <FileExplorer files={activeFragment.files as ProjectFiles} />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
                   {isBuilding ? (
