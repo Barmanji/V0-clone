@@ -1,7 +1,6 @@
 import { inngest } from "./client";
 import {
   gemini,
-  openai,
   createAgent,
   createTool,
   createNetwork,
@@ -17,8 +16,13 @@ import {
 import { lastAssistantTextMessageContent } from "./utils";
 import db from "@/lib/db";
 import { MessageRole, MessageType } from "@/lib/generated/prisma/enums";
+import {
+  getModelFromConfig,
+  type AgentModelConfig,
+} from "@/lib/agent-model";
+import { validateApiKeyWithProvider } from "@/lib/provider-heartbeat";
 
-const model = openai({ model: "gpt-4o-mini" });
+type ModelConfig = AgentModelConfig;
 
 export const codeAgentFunction = inngest.createFunction(
   {
@@ -27,6 +31,33 @@ export const codeAgentFunction = inngest.createFunction(
   },
 
   async ({ event, step }) => {
+    const modelConfig: ModelConfig | undefined = event.data.modelConfig;
+
+    // Fail fast on an invalid user-provided API key before a sandbox is
+    // created or any agent iteration runs. Server-default keys are skipped.
+    const keyCheck = await step.run("validate-api-key", async () => {
+      if (!modelConfig?.apiKey) return { ok: true as const };
+      const provider = modelConfig.provider;
+      if (!provider) return { ok: true as const };
+      return validateApiKeyWithProvider(provider, modelConfig.apiKey);
+    });
+
+    if (!keyCheck.ok) {
+      await step.run("save-key-error", async () => {
+        return db.message.create({
+          data: {
+            projectId: event.data.projectId,
+            content: `Your ${modelConfig?.provider} API key was rejected by the provider. Open the model selector, add a valid key, and try again.`,
+            role: MessageRole.ASSISTANT,
+            type: MessageType.ERROR,
+          },
+        });
+      });
+      return { error: "Invalid API key for " + modelConfig?.provider };
+    }
+
+    const model = getModelFromConfig(modelConfig);
+
     // Step-1
     const sandboxId = await step.run("get-sandbox-id", async () => {
       const sandbox = await Sandbox.create("v0-clone-build-dev");
@@ -90,7 +121,7 @@ export const codeAgentFunction = inngest.createFunction(
     const codeAgent = createAgent({
       name: "code-agent",
       description: "An expert coding agent",
-      system: resolvedPrompt, // injecting it here, lets try
+      system: resolvedPrompt,
       model: model,
       tools: [
         // 1. Terminal

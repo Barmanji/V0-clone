@@ -19,7 +19,7 @@ const FragmentCard = ({ fragment, isActiveFragment, onFragmentClick }: FragmentC
       className={cn(
         "flex items-start text-start gap-2 border rounded-lg bg-muted w-fit p-2 hover:bg-secondary transition-colors",
         isActiveFragment &&
-          "bg-primary text-primary-foreground border-primary hover:bg-primary"
+          "bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600"
       )}
       onClick={() => onFragmentClick(fragment)}
     >

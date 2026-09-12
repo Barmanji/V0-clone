@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createProject, getProjectById, getProjects } from "../actions";
+import { createProject, getProjectById, getProjects, triggerCodeAgent, applyEnhancedPrompt } from "../actions";
 
 export const useGetProjects = () => {
     return useQuery({
@@ -11,7 +11,7 @@ export const useGetProjects = () => {
 export const useCreateProject = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (value: any) => createProject(value), // Consider replacing 'any' with your actual payload type
+        mutationFn: (payload: { value: string; modelConfig?: any }) => createProject(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["projects"] });
             queryClient.invalidateQueries({ queryKey: ["status"] });
@@ -19,11 +19,32 @@ export const useCreateProject = () => {
     });
 };
 
-// Fix: Explicitly typed projectId as a string
+export const useTriggerCodeAgent = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: { projectId: string; value: string; modelConfig?: any }) =>
+            triggerCodeAgent(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["messages"] });
+        }
+    });
+};
+
+export const useApplyEnhancedPrompt = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: { projectId: string; value: string; modelConfig?: any }) =>
+        applyEnhancedPrompt(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["messages"] });
+        }
+    });
+};
+
 export const useGetProjectById = (projectId: string) => {
     return useQuery({
         queryKey: ["project", projectId],
         queryFn: () => getProjectById(projectId),
-        enabled: !!projectId // Good practice: Prevents fetching if projectId is undefined/empty
+        enabled: !!projectId
     });
 };
