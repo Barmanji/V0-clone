@@ -35,6 +35,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: ^1.2.6
         version: 1.2.6(@types/react@19.2.18)(react@19.2.8)
+      '@remixicon/react':
+        specifier: ^4.9.0
+        version: 4.9.0(react@19.2.8)
       '@rive-app/react-webgl2':
         specifier: ^4.33.0
         version: 4.33.0(react@19.2.8)
@@ -1985,6 +1988,11 @@ packages:
         optional: true
       react-redux:
         optional: true
+
+  '@remixicon/react@4.9.0':
+    resolution: {integrity: sha512-5/jLDD4DtKxH2B4QVXTobvV1C2uL8ab9D5yAYNtFt+w80O0Ys1xFOrspqROL3fjrZi+7ElFUWE37hBfaAl6U+Q==}
+    peerDependencies:
+      react: '>=18.2.0'
 
   '@rive-app/react-webgl2@4.33.0':
     resolution: {integrity: sha512-9K7hs1BfMX4qjkBio7vdY+lX0nI/p7enALaGdyOYODs47fZoMlEtSUm8tchsTHYT5q8PluG0tsSzRmhlV16BDA==}
@@ -8439,6 +8447,10 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
       react-redux: 9.3.0(@types/react@19.2.18)(react@19.2.8)(redux@5.0.1)
+
+  '@remixicon/react@4.9.0(react@19.2.8)':
+    dependencies:
+      react: 19.2.8
 
   '@rive-app/react-webgl2@4.33.0(react@19.2.8)':
     dependencies:
