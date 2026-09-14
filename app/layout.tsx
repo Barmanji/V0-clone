@@ -36,10 +36,6 @@ export const metadata: Metadata = {
   applicationName: "v0-clone",
   keywords: ["v0", "clone", "ai", "app builder", "nextjs"],
   creator: "v0-clone",
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-  },
   openGraph: {
     type: "website",
     siteName: "v0-clone",

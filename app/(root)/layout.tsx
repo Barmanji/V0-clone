@@ -1,5 +1,6 @@
 import { onBoardUser } from "@/modules/auth/actions";
 import { Navbar } from "@/modules/home/components/navbar";
+import { SocialFooter } from "@/components/social-footer";
 import React from "react";
 
 const RootLayout = async({ children }: {children: React.ReactNode}) => {
@@ -13,6 +14,7 @@ const RootLayout = async({ children }: {children: React.ReactNode}) => {
       <div className="flex-1 w-full mt-20">
         {children}
       </div>
+      <SocialFooter />
     </main>
   );
 };

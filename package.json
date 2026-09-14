@@ -20,6 +20,7 @@
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "7.10.0",
     "@radix-ui/react-use-controllable-state": "^1.2.6",
+    "@remixicon/react": "^4.9.0",
     "@rive-app/react-webgl2": "^4.33.0",
     "@shadcn/react": "^0.3.0",
     "@streamdown/cjk": "^1.0.3",

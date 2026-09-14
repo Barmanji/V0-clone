@@ -42,6 +42,22 @@ export const MODELS: ModelOption[] = [
     contextWindow: "128K",
   },
   {
+    id: "gpt-5-mini",
+    name: "GPT-5 Mini",
+    provider: "openai",
+    description: "Cost-efficient and and decent for general task",
+    requiresApiKey: true,
+    contextWindow: "256K",
+  },
+  {
+    id: "gpt-5-nano",
+    name: "GPT-5 Nano",
+    provider: "openai",
+    description: "Cost-efficient and good for basic web dev",
+    requiresApiKey: true,
+    contextWindow: "256K",
+  },
+  {
     id: "gpt-5.6-luna",
     name: "GPT-5.6 Luna",
     provider: "openai",
