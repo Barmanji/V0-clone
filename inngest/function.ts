@@ -66,6 +66,7 @@ export const codeAgentFunction = inngest.createFunction(
       return sandbox.sandboxId;
     });
     // Persistent mem
+    // TODO: rather than attaching prev mesgs to agent, send them files as well for a better context
     const previousMessages: TextMessage[] = await step.run(
       "get-previous-messages",
       async () => {

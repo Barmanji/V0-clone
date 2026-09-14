@@ -1,4 +1,4 @@
-# v0-clone - [LINK](https://v0-clone-jj.vercel.app)
+# v0-clone - [Link](https://v0-clone-jj.vercel.app)
 
 A website which builds website.
 
