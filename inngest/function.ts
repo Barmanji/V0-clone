@@ -18,6 +18,7 @@ import {
 import { lastAssistantTextMessageContent } from "./utils";
 import db from "@/lib/db";
 import { MessageRole, MessageType } from "@/lib/generated/prisma/enums";
+import type { ProjectFiles } from "@/modules/types";
 import {
   getModelFromConfig,
   type AgentModelConfig,
@@ -65,8 +66,7 @@ export const codeAgentFunction = inngest.createFunction(
       const sandbox = await Sandbox.create("v0-clone-build-dev");
       return sandbox.sandboxId;
     });
-    // Persistent mem
-    // TODO: rather than attaching prev mesgs to agent, send them files as well for a better context
+    // Persistent memory — previous messages + files from the last completed build
     const previousMessages: TextMessage[] = await step.run(
       "get-previous-messages",
       async () => {
@@ -93,10 +93,31 @@ export const codeAgentFunction = inngest.createFunction(
       },
     );
 
+    const previousFiles: ProjectFiles = await step.run(
+      "get-previous-files",
+      async () => {
+        const fragment = await db.fragment.findFirst({
+          where: { message: { projectId: event.data.projectId } },
+          orderBy: { createdAt: "desc" },
+        });
+        return (fragment?.files ?? {}) as ProjectFiles;
+      },
+    );
+
+    // Hydrate the fresh sandbox with the previous build's files so the agent
+    // can read them and the verifyBuild step type-checks the real code.
+    await step.run("hydrate-sandbox-files", async () => {
+      const sandbox = await Sandbox.connect(sandboxId);
+      for (const [path, content] of Object.entries(previousFiles)) {
+        await sandbox.files.write(path, content);
+      }
+      return Object.keys(previousFiles).length; // dummy return so inngest will show somthn
+    });
+
     const state = createState(
       {
         summary: "",
-        files: {},
+        files: previousFiles,
       },
       {
         messages: previousMessages,
@@ -117,10 +138,15 @@ export const codeAgentFunction = inngest.createFunction(
           .join(", ");
       },
     );
+
+    const existingFilesList = Object.keys(previousFiles).length
+      ? Object.keys(previousFiles).map((f) => `  - ${f}`).join("\n")
+      : "(none — fresh build)";
+
     const resolvedPrompt = PROMPT.replace(
       "{{SHADCN_COMPONENT_LIST}}",
       shadcnComponents,
-    );
+    ).replace("{{EXISTING_FILES}}", existingFilesList);
     const codeAgent = createAgent({
       name: "code-agent",
       description: "An expert coding agent",

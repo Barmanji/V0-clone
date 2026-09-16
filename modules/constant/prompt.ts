@@ -44,6 +44,15 @@ Environment:
 - NEVER include "/home/user" in any file path — this will cause critical errors.
 - Never use "@" inside readFiles or other file system operations — it will fail
 
+EXISTING PROJECT FILES:
+{{EXISTING_FILES}}
+If a non-empty file list is shown above, this is a prior build you must edit — not a fresh project. Rules when a file list is present:
+1. Use readFiles to inspect every file listed above before writing any code.
+2. Modify and extend the existing code; do not rebuild from scratch.
+3. Preserve all working features that are not being changed.
+4. Never recreate app/page.tsx from scratch if it already contains real content — edit it instead.
+5. Do not rename or delete existing entry files unless the user explicitly asks for it.
+
 CRITICAL SYNTAX RULES (violating these breaks the build silently — read carefully):
 
 1. THE "use client" DIRECTIVE:
