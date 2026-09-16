@@ -81,7 +81,7 @@ const FragmentWeb = ({ data }: FragmentWebProps) => {
         key={fragmentKey}
         className="h-full w-full"
         sandbox="allow-scripts allow-same-origin allow-scripts"
-        loading="eager"
+        loading="lazy"
         src={data.sandboxUrl}
       />
     </div>
