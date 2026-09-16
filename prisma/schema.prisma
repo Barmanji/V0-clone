@@ -4,79 +4,93 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+    provider = "prisma-client"
+    output   = "../lib/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+    provider = "postgresql"
 }
 
 model User {
-  id  String @id @default(uuid())
-  email String @unique
-  name String?
-  image String?
-  clerkId String @unique
+    id      String   @id @default(uuid())
+    email   String   @unique
+    name    String?
+    image   String?
+    clerkId String   @unique
+    type    PaidUser @default(FREE)
 
-  projects Project[]
+    projects Project[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  }
-
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    razorpays Razorpay[]
+}
 
 model Project {
-  id  String @id @default(uuid())
-  name String
-  userId String
-  user User @relation(fields: [userId], references: [id] , onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        String   @id @default(uuid())
+    name      String
+    userId    String
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  messages Message[]
+    messages Message[]
 }
 
 enum MessageRole {
-  USER
-  ASSISTANT
+    USER
+    ASSISTANT
 }
 
 enum MessageType {
-  RESULT
-  ERROR
+    RESULT
+    ERROR
 }
 
+enum PaidUser {
+    FREE
+    PAID
+}
 
 model Message {
-  id  String @id @default(uuid())
-  content String
-  role MessageRole
-  type MessageType
+    id      String      @id @default(uuid())
+    content String
+    role    MessageRole
+    type    MessageType
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  projectId String
-  project Project @relation(fields: [projectId], references: [id] , onDelete: Cascade)
+    projectId String
+    project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  fragments Fragment?
+    fragments Fragment?
 }
 
 model Fragment {
-  id  String @id @default(uuid())
-  messageId String @unique
-  message Message @relation(fields: [messageId], references: [id] , onDelete: Cascade)
-  sandboxUrl String
-  title  String
-  files Json
+    id         String  @id @default(uuid())
+    messageId  String  @unique
+    message    Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    sandboxUrl String
+    title      String
+    files      Json
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
-model Usage{
-  key String @id
-  points Int
-  expire DateTime?
+model Usage {
+    key    String    @id
+    points Int
+    expire DateTime?
+}
+
+model Razorpay {
+    id        String @id @default(uuid())
+    userId    String
+    user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    paymentId String
+    orderId   String
+    signature String
 }
