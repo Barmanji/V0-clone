@@ -111,6 +111,7 @@ export const codeAgentFunction = inngest.createFunction(
       for (const [path, content] of Object.entries(previousFiles)) {
         await sandbox.files.write(path, content);
       }
+      return Object.keys(previousFiles).length; // dummy return so inngest will show somthn
     });
 
     const state = createState(
