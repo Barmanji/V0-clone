@@ -82,7 +82,7 @@ const FragmentWeb = ({ data }: FragmentWebProps) => {
         className="h-full w-full"
         sandbox="allow-scripts allow-same-origin allow-scripts"
         loading="lazy"
-        src={data.sandboxUrl}
+        src={data.sandboxUrl.replace(/^http:/, "https:")}
       />
     </div>
   );
