@@ -2,6 +2,7 @@
 
 import db from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
+import { unstable_rethrow } from "next/navigation";
 
 export const onBoardUser = async () => {
   try {
@@ -36,6 +37,7 @@ export const onBoardUser = async () => {
       message: "User onboarded successfully",
     };
   } catch (error) {
+    unstable_rethrow(error);
     console.error("❌ Error onboarding user:", error);
     return {
       success: false,
@@ -67,6 +69,7 @@ export const getCurrentUser = async () => {
 
     return dbUser;
   } catch (error) {
+    unstable_rethrow(error);
     console.error("❌ Error fetching current user:", error);
     return null;
   }
