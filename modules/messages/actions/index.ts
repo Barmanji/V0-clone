@@ -10,7 +10,6 @@ import type { CreateProjectPayload, SendMessagePayload } from "@/modules/types";
 export const createMessages = async (payload: CreateProjectPayload & { projectId: string }) => {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
-
   const { value, projectId } = payload;
 
   // Verify project ownership
