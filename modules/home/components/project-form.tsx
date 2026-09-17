@@ -12,6 +12,7 @@ import z from "zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCreateProject } from "@/modules/projects/hooks/create-and-getProjectbyId";
+import { useCreditLimit } from "@/modules/usage/hooks/use-credit-limit";
 import { useAuth } from "@clerk/nextjs";
 import { ModelSelector } from "@/modules/model-select/components/model-selector";
 import { useModel } from "@/modules/model-select/hooks/use-model";
@@ -83,6 +84,7 @@ const ProjectForm = () => {
   const router = useRouter();
   const { config: modelConfig, updateModel } = useModel();
   const { mutateAsync, isPending } = useCreateProject();
+  const { handleCreditLimit, creditLimitDialog } = useCreditLimit();
   const { isSignedIn } = useAuth();
   const {
     register,
@@ -124,7 +126,17 @@ const ProjectForm = () => {
         value: values.content,
         modelConfig,
       });
-      router.push(`/projects/${res.id}`);
+
+      if (!res.success) {
+        if (res.code === "LIMIT_REACHED") {
+          handleCreditLimit(res.isPro);
+        } else {
+          toast.error("Failed to create project");
+        }
+        return;
+      }
+
+      router.push(`/projects/${res.project.id}`);
       toast.success("Project created successfully");
       reset();
     } catch (error) {
@@ -232,6 +244,7 @@ const ProjectForm = () => {
           </div>
         </div>
       </form>
+      {creditLimitDialog}
     </div>
   );
 };

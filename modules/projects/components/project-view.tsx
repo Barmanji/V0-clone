@@ -8,23 +8,34 @@ import {
   ResizableHandle,
 } from "@/components/ui/resizable";
 import MessagesContainer from "./messages-container";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProjectHeader from "./project-header";
 import FragmentWeb from "./fragment-web";
 import { Code, CrownIcon, EyeIcon, Loader2Icon } from "lucide-react";
 import { FileExplorer } from "./file-explorer";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
 import type { Fragment } from "@/lib/generated/prisma/client";
 import type { ProjectFiles } from "@/modules/types";
+import { getCurrentUser } from "@/modules/auth/actions";
 
 const ProjectView = ({ projectId }: { projectId: string }) => {
   const [activeFragment, setActiveFragment] = useState<Fragment | null>(null);
   const [tabState, setTabState] = useState("preview");
   const [isBuilding, setIsBuilding] = useState(false);
-  const { has } = useAuth();
-  const hasProAccess = has?.({ plan: "pro" });
+  const [hasProAccess, setHasProAccess] = useState<boolean | null>(null);
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      const dbUser = await getCurrentUser();
+
+      if (dbUser) {
+        // Pull out just the Plan property here
+        setHasProAccess(dbUser.Plan === "PAID");
+      }
+    };
+
+    fetchUserPlan();
+  }, []);
 
   return (
     <div className="h-screen">

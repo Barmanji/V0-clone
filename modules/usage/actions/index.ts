@@ -1,6 +1,7 @@
 "use server";
 import { auth } from "@clerk/nextjs/server";
 import { DURATION, FREE_POINTS, PRO_POINTS, getUsageStatus } from "@/lib/usage";
+import { hasProAccess } from "@/lib/razorpay";
 
 export const status = async () => {
   try {
@@ -11,9 +12,7 @@ export const status = async () => {
     }
 
 
-    const { has } = await auth();
-    const hasProAccess = has({ plan: "pro" });
-    const maxPoints = hasProAccess ? PRO_POINTS : FREE_POINTS;
+    const maxPoints = (await hasProAccess()) ? PRO_POINTS : FREE_POINTS;
 
     const result = await getUsageStatus();
 

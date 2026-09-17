@@ -64,6 +64,7 @@ export const getCurrentUser = async () => {
         name: true,
         image: true,
         clerkId: true,
+        Plan: true
       },
     });
 

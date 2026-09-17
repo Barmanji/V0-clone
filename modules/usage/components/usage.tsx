@@ -1,16 +1,30 @@
+"use client";
 import Link from "next/link";
 import { CrownIcon } from "lucide-react";
 import { formatDuration, intervalToDuration } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useStatus } from "../hooks/usage";
-import { useAuth } from "@clerk/nextjs";
+// import { useAuth } from "@clerk/nextjs";
 import { Spinner } from "@/components/ui/spinner";
+import { getCurrentUser } from "@/modules/auth/actions";
+import { useEffect, useState } from "react";
 
 export const Usage = () => {
   const { data, isLoading, error } = useStatus();
-  const { has } = useAuth();
-  const hasProAccess = has?.({ plan: "pro" });
 
+  const [hasProAccess, setHasProAccess] = useState<boolean | null>(null);
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      const dbUser = await getCurrentUser();
+
+      if (dbUser) {
+        // Pull out just the Plan property here
+        setHasProAccess(dbUser.Plan === "PAID");
+      }
+    };
+
+    fetchUserPlan();
+  }, []);
   if (isLoading) {
     return (
       <div className="rounded-t-xl bg-background border border-b-0 p-2.5">
@@ -49,7 +63,11 @@ export const Usage = () => {
           </p>
         </div>
         {!hasProAccess && (
-          <Button size={"lg"} variant={"secondary"} className={"ml-auto bg-green-600"}>
+          <Button
+            size={"lg"}
+            variant={"secondary"}
+            className={"ml-auto bg-green-600"}
+          >
             <Link href={"/pricing"}>
               <CrownIcon /> Upgrade
             </Link>
@@ -59,3 +77,4 @@ export const Usage = () => {
     </div>
   );
 };
+

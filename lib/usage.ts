@@ -1,6 +1,7 @@
 import { RateLimiterPrisma } from "rate-limiter-flexible";
 import db from "./db";
 import { auth } from "@clerk/nextjs/server";
+import { hasProAccess } from "./razorpay";
 
 export const FREE_POINTS = 5;
 export const PRO_POINTS = 100;
@@ -8,15 +9,10 @@ export const DURATION = 30 * 24 * 60 * 60; // 30 days
 export const GENERATION_COST = 1;
 
 export async function getUsageTracker() {
-  const { has } = await auth();
-  const hasProAccess = has({ plan: "pro" });
-
-  console.log("Has Pro Access:", hasProAccess);
-
   const usageTracker = new RateLimiterPrisma({
     storeClient: db,
     tableName: "Usage",
-    points: hasProAccess ? PRO_POINTS : FREE_POINTS,
+    points: (await hasProAccess()) ? PRO_POINTS : FREE_POINTS,
     duration: DURATION
   });
 
