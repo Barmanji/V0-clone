@@ -98,7 +98,7 @@ const defaultProps: Pricing2Props = {
       image:
         "https://deifkwefumgah.cloudfront.net/shadcnblocks/image-set/placeholder/pricing-plans/plan2.svg",
       description: "For professionals and teams",
-      monthlyPrice: "₹49",
+      monthlyPrice: "₹1",
       yearlyPrice: "$499",
       features: [
         "100 AI generations per month",
