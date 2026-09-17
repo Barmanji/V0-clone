@@ -18,7 +18,7 @@ model User {
     name    String?
     image   String?
     clerkId String   @unique
-    type    PaidUser @default(FREE)
+    Plan    PlanType @default(FREE)
 
     projects Project[]
 
@@ -48,7 +48,7 @@ enum MessageType {
     ERROR
 }
 
-enum PaidUser {
+enum PlanType {
     FREE
     PAID
 }
@@ -90,7 +90,7 @@ model Razorpay {
     id        String @id @default(uuid())
     userId    String
     user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-    paymentId String
-    orderId   String
+    paymentId String @unique
+    orderId   String @unique
     signature String
 }
