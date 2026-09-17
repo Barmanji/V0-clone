@@ -5,7 +5,15 @@ import db from "@/lib/db";
 import { MessageRole, MessageType } from "@/lib/generated/prisma/enums";
 import { getCurrentUser } from "@/modules/auth/actions";
 import { consumeCredits } from "@/lib/usage";
+import { hasProAccess } from "@/lib/razorpay";
+import type { Project } from "@/lib/generated/prisma/client";
 import type { AgentTriggerPayload, CreateProjectPayload } from "@/modules/types";
+
+type CreateProjectResult =
+  | { success: true; project: Project }
+  | { success: false; code: "LIMIT_REACHED"; isPro: boolean }
+  | { success: false; code: "UNAUTHORIZED" }
+  | { success: false; code: "ERROR"; message: string };
 
 export const getProjects = async () => {
   const user = await getCurrentUser();
@@ -52,24 +60,19 @@ function generateProjectName(prompt: string): string {
  * Creates a project with the user's initial message.
  * Does NOT trigger the code agent — use triggerCodeAgent() separately.
  */
-export const createProject = async (payload: CreateProjectPayload) => {
+export const createProject = async (
+  payload: CreateProjectPayload,
+): Promise<CreateProjectResult> => {
   const user = await getCurrentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) return { success: false, code: "UNAUTHORIZED" };
 
-  const { value, modelConfig } = payload;
+  const { value } = payload;
 
   try {
     await consumeCredits();
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error("You have reached your limit", {
-        cause: { code: "BAD_REQUEST", message: "You have reached your limit" },
-      });
-    } else {
-      throw new Error("Too many requests", {
-        cause: { code: "TOO_MANY_REQUESTS", message: "Too many requests" },
-      });
-    }
+  } catch {
+    const isPro = await hasProAccess();
+    return { success: false, code: "LIMIT_REACHED", isPro };
   }
 
   const newProject = await db.project.create({
@@ -86,7 +89,7 @@ export const createProject = async (payload: CreateProjectPayload) => {
     },
   });
 
-  return newProject;
+  return { success: true, project: newProject };
 };
 
 /**
