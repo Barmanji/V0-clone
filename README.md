@@ -1,6 +1,7 @@
 # v0-clone - [Link]
 A website which builds website.
-[![Alt Text](https://i.postimg.cc/BnmNKd3h/v0-hero.png)](https://www.youtube.com/watch?v=IPgyCBnJMaw)
+
+https://github.com/user-attachments/assets/8deb0c4b-3d96-47c8-81f9-4726d715ea26
 
 ## Quickstart
 
