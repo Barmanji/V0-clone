@@ -1,6 +1,6 @@
-# v0-clone - [Link](https://v0-clone-jj.vercel.app)
-
+# v0-clone - [Link]
 A website which builds website.
+[![Alt Text](https://i.postimg.cc/BnmNKd3h/v0-hero.png)](https://www.youtube.com/watch?v=IPgyCBnJMaw)
 
 ## Quickstart
 

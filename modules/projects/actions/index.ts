@@ -38,7 +38,7 @@ function generateProjectName(prompt: string): string {
     .split(/\s+/);
 
   const stopwords = new Set([
-    "a", "an","me","they", "the", "for", "with", "using", "please", "create", "build", "buid",
+    "a", "an", "existing","me","they", "the", "for", "with", "using", "please", "create", "build", "buid",
     "make", "generate", "i", "want", "need", "can", "you", "to", "of", "and",
     "that", "this", "app", "application", "website", "page", "clone"
   ]);

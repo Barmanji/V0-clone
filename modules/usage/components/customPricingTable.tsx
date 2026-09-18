@@ -208,7 +208,7 @@ export const CustomPricingTable = (props: Props) => {
         />
       </div>
 
-      <div className="container">
+<div className="container mx-auto">
         <div className="mx-auto mb-5 max-w-5xl text-center">
           <h2 className="mb-4 text-4xl font-semibold tracking-tight lg:text-5xl">
             {heading}
