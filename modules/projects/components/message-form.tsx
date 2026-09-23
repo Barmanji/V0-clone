@@ -159,7 +159,7 @@ const MessageForm = ({ projectId, disabled = false }: MessageFormProps) => {
             <Info className="size-3.5 shrink-0 cursor-help mt-0.5" />
           </TooltipTrigger>
           <TooltipContent>
-            Default: GPT-4o Mini. Select other models using the dropdown above.
+            Default: GPT-6-Luna. Select other models using the dropdown above.
           </TooltipContent>
         </Tooltip>
         <span className="flex-1 min-w-0">
