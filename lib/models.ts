@@ -4,7 +4,7 @@ export type Provider = "openai" | "anthropic" | "google" | "xai";
 // agent, and question-flow fallbacks all read these — change the default in
 // exactly this one place. The expected setup is an OpenAI-compatible completion
 // via the server's OPENAI_API_KEY; the rest of the catalog is bring-your-own-key.
-export const DEFAULT_MODEL_ID = "gpt-4o-mini";
+export const DEFAULT_MODEL_ID = "gpt-6-luna";
 export const DEFAULT_PROVIDER: Provider = "openai";
 
 export interface ModelConfig {
@@ -26,10 +26,19 @@ export interface ModelOption {
 export const MODELS: ModelOption[] = [
   // OpenAI
   {
-    id: DEFAULT_MODEL_ID,
+    id: "gpt-6-luna",
+    name: "GPT-6 Luna",
+    provider: "openai",
+    description: "Most intelligent and cheapest OpenAI model",
+    // Default model — runs on the server's OPENAI_API_KEY when no key is set.
+    requiresApiKey: false,
+    contextWindow: "256K",
+  },
+  {
+    id: "gpt-4o-mini",
     name: "GPT-4o Mini",
-    provider: DEFAULT_PROVIDER,
-    description: "Fast & affordable (default)",
+    provider: "openai",
+    description: "Fast & affordable",
     requiresApiKey: false,
     contextWindow: "128K",
   },
@@ -84,6 +93,14 @@ export const MODELS: ModelOption[] = [
   {
     id: "gpt-6-astra",
     name: "GPT-6 Astra",
+    provider: "openai",
+    description: "Most intelligent OpenAI model",
+    requiresApiKey: true,
+    contextWindow: "256K",
+  },
+  {
+    id: "gpt-6-sol",
+    name: "GPT-6 Sol",
     provider: "openai",
     description: "Most intelligent OpenAI model",
     requiresApiKey: true,
