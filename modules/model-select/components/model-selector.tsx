@@ -110,7 +110,7 @@ export function ModelSelector({ config, onSelect }: ModelSelectorProps) {
   if (!mounted) {
     return (
       <Button variant="outline" size="sm" className="h-8 text-xs">
-        GPT-4o Mini
+        GPT-6 Luna
       </Button>
     );
   }
