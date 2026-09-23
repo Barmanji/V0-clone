@@ -1,5 +1,4 @@
 import { gemini, openai, anthropic, grok } from "@inngest/agent-kit";
-import { openaiResponses } from "@inngest/ai";
 import { DEFAULT_MODEL_ID } from "@/lib/models";
 
 export interface AgentModelConfig {
@@ -11,8 +10,14 @@ export interface AgentModelConfig {
 /**
  * OpenAI's gpt-5/gpt-6/o1/o3 family are reasoning models. Chat Completions
  * forbids function/tool calling while reasoning is on ("use /v1/responses or
- * set reasoning_effort to 'none'"), so these models are routed to the
- * Responses API, where tools and reasoning coexist.
+ * set reasoning_effort to 'none'").
+ *
+ * agent-kit 0.13.2 (latest) only knows the chat adapter — its request-parser
+ * registry and auth-header handlers are keyed per format and hardcoded to
+ * openai-chat/anthropic/gemini/grok/azure-openai, so a Responses-adapter
+ * model throws "Cannot read properties of undefined (reading 'request')".
+ * Reasoning models therefore run on chat completions with reasoning forced
+ * off — the only way OpenAI accepts their function tools there.
  */
 function isReasoningModel(modelId: string): boolean {
   return /^(gpt-[56]|o[13])/i.test(modelId);
@@ -28,27 +33,17 @@ export function getModelFromConfig(config?: AgentModelConfig) {
   if (!config || !config.provider || config.provider === "openai") {
     const modelId = config?.modelId || DEFAULT_MODEL_ID;
 
-    if (isReasoningModel(modelId)) {
-      // Reasoning model → Responses API so the agent's tools are allowed.
-      const opts: Parameters<typeof openaiResponses>[0] = {
-        model: modelId,
-        defaultParameters: { reasoning: { effort: "medium" } },
-      };
-      if (config?.apiKey) opts.apiKey = config.apiKey;
-      // Identical runtime shape to the agent-kit model; agent-kit 0.13.2's
-      // types come from its own pinned @inngest/ai@0.1.6, hence the cast.
-      return openaiResponses(opts) as unknown as ReturnType<typeof openai>;
-    }
-
-    // Chat completions for everything else. Safety net: if a reasoning model
-    // ever lands on this path, reasoning must be off or OpenAI refuses its
-    // function tools (set reasoning_effort to "none").
     const opts: Parameters<typeof openai>[0] = {
       model: modelId,
     };
+
     if (isReasoningModel(modelId)) {
+      // Tools + no reasoning on chat completions. `reasoning_effort` predates
+      // this package's Input type, hence the cast — it IS sent in the body
+      // (the adapter has no schema; it forwards what it's given).
       opts.defaultParameters = { reasoning_effort: "none" } as never;
     }
+
     if (config?.apiKey) opts.apiKey = config.apiKey;
     return openai(opts);
   }

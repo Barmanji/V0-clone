@@ -17,7 +17,6 @@
     "@e2b/code-interpreter": "^2.7.2",
     "@hookform/resolvers": "^5.9.1",
     "@inngest/agent-kit": "^0.13.2",
-    "@inngest/ai": "^0.1.7",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "7.10.0",
     "@radix-ui/react-use-controllable-state": "^1.2.6",
