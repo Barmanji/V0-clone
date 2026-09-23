@@ -170,3 +170,4 @@ sequenceDiagram
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
